@@ -4,6 +4,8 @@
 
 **状态：实验性源码适配，尚未完成 Android 全量编译及实机解密验证。不能把本树视为已验证的 Android 17 解密 Recovery。**
 
+GitHub Actions 自动/手动编译、诊断版和解密参数输入说明见 [ACTIONS.md](ACTIONS.md)。
+
 硬件基础来自 OrangeFox 的 dipper / sdm845-common；解密核心使用 TWRP-Test 的 Android 16 分支。该核心含现代 synthetic-password、keystore2 和 HIDL Gatekeeper 路径，但实际 Android 17 ROM 的 protector 格式、TEE、Keymaster blob、fscrypt policy 仍必须匹配。上游 manifest README 主要面向 Weaver/OMAPI 设备，本树针对 dipper 的非 Weaver 高通路径仍需实机验证。不是 Fox 12.1 设备树的直接替换品。
 
 ## 范围
