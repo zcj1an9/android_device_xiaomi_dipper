@@ -91,7 +91,9 @@ DIPPER_JOBS=4 bash tools/build.sh /work/twrp
 
 脚本把设备树复制到 `/work/twrp/device/xiaomi/dipper`；若目标已有另一棵树则停止，避免覆盖。若已经把本仓库直接放在该路径，脚本会直接使用它。
 
-默认 lunch：`twrp_dipper-bp2a-userdebug`，对应已检查的 TWRP-Test build 分支。自定义源码若使用其他 release config，可通过 `DIPPER_LUNCH` 明确覆盖。没有启用 `ALLOW_MISSING_DEPENDENCIES` 来掩盖缺失模块。
+默认 lunch：`twrp_dipper-bp2a-userdebug`，对应已检查的 TWRP-Test build 分支。自定义源码若使用其他 release config，可通过 `DIPPER_LUNCH` 明确覆盖。
+
+这套最小 manifest 按[上游说明](https://github.com/TWRP-Test/platform_manifest_twrp_aosp/blob/814b553116ceedde197f70389cff9661d81d8337/README.md)要求启用 `ALLOW_MISSING_DEPENDENCIES=true`：未同步的测试/模拟器项目仍可能被其他 Android.bp 引用，不能在全局依赖扫描阶段就中止。该开关不代表镜像已经构建成功；脚本仍要求 `recoveryimage` 命令成功退出、镜像存在且不超过 recovery 分区大小。若实际构建目标继续报缺依赖，应修复对应依赖，不能用空模块替代。
 
 脚本还移除 Recovery 自己的 keystore2 服务的 `critical` 标志，避免该实验服务反复崩溃时触发重启而失去 ADB；不改手机系统。产物：
 
