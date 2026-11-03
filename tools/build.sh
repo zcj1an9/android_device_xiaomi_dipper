@@ -30,7 +30,11 @@ lines = s.splitlines(True)
 p.write_text(''.join(x for x in lines if not x.lstrip().startswith('critical ')
                    and 'Reboot to bootloader if Keystore' not in x))
 PY
-unset ALLOW_MISSING_DEPENDENCIES
+# Required by this upstream minimal manifest: it omits projects referenced by
+# unrelated CTS/emulator/test modules which Soong still discovers globally.
+# Keep recoveryimage's exit status and image existence/size checks below.
+export ALLOW_MISSING_DEPENDENCIES=true
+printf 'Upstream minimal-manifest mode: ALLOW_MISSING_DEPENDENCIES=%s\n' "$ALLOW_MISSING_DEPENDENCIES"
 source build/envsetup.sh
 # Android 16's release-config lunch syntax. Override only if your source differs.
 lunch "${DIPPER_LUNCH:-twrp_dipper-bp2a-userdebug}"

@@ -38,6 +38,8 @@ JSON 作为环境变量传入，由 Python 转为参数列表执行，不会当�
 
 工作流使用 Ubuntu 24.04 runner，只清理其临时环境中的 Android SDK、.NET、GHC、Swift，创建 8 GiB swap，并检查可用磁盘。完整源码及构建若超出免费 runner 资源，任务会失败并保留已有日志；不保证该源码版本一定能在托管 runner 上完成。
 
+构建脚本按上游最小 manifest 要求设置 `ALLOW_MISSING_DEPENDENCIES=true`，以允许 Soong 扫描仍引用已裁剪模块的测试/模拟器项目。编译命令退出码、镜像存在和分区容量检查仍然有效；不忽略实际构建命令的失败。
+
 diagnostic 镜像启动后可在电脑执行：
 
 ```powershell
