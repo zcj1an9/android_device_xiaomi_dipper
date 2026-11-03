@@ -36,7 +36,11 @@ JSON 作为环境变量传入，由 Python 转为参数列表执行，不会当�
 
 无论成功失败都会尝试上传 `dipper-build-logs-<编号>`，保留 14 天。失败请提供 `build-console.log` 或 `source-sync.log`。尚未编译成功前，不应把工作流存在等同于可用镜像。
 
-工作流使用 Ubuntu 24.04 runner，只清理其临时环境中的 Android SDK、.NET、GHC、Swift，创建 8 GiB swap，并检查可用磁盘。完整源码及构建若超出免费 runner 资源，任务会失败并保留已有日志；不保证该源码版本一定能在托管 runner 上完成。
+工作流使用 Ubuntu 24.04 runner，只清理其临时环境中的 Android SDK、.NET、GHC、Swift，创建 24 GiB swap，并检查可用磁盘。默认单任务编译；Soong 的 Go 运行时设置 `GOMEMLIMIT=10GiB`、`GOGC=50`、`GOMAXPROCS=2`，降低内存峰值。GOMEMLIMIT 是 Go 运行时的软限制，不是整个构建进程的硬限制；这些设置不能保证避免内存不足或平台中断。
+
+构建期间每 60 秒把可用内存、剩余 swap、磁盘和最高 RSS 进程写入 Action 日志及 `resource-usage.log`。正常退出或编译失败时还会保存 `runner-diagnostics.txt`。若整个运行器被关闭，artifact 上传仍可能无法执行，但已输出的资源记录可用于排查。编译步骤单独限制 300 分钟，给正常超时后的日志收集留出时间。
+
+第三轮构建在 Soong 分析阶段收到 runner shutdown、退出 143，没有记录新的编译器报错；不能据此直接认定 OOM。本次调整是降低资源占用并增加证据，不是已确认根因的源码修复。
 
 构建脚本按上游最小 manifest 要求设置 `ALLOW_MISSING_DEPENDENCIES=true`，以允许 Soong 扫描仍引用已裁剪模块的测试/模拟器项目。编译命令退出码、镜像存在和分区容量检查仍然有效；不忽略实际构建命令的失败。
 
