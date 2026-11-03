@@ -1,0 +1,16 @@
+# Re-fetched and verified with tools/fetch-prebuilts.sh
+prebuilt/Image.gz-dtb
+recovery/root/vendor/lib64/
+recovery/root/system/bin/android.hardware.*
+recovery/root/system/bin/qseecomd
+# Installed-ROM profile is local and deliberately not guessed for other users.
+crypto-profile.*
+recovery/recovery.fstab
+recovery/root/fstab.qcom
+recovery/root/vendor/etc/fstab.qcom
+recovery/root/vendor/etc/vintf/manifest.xml
+recovery/root/init.recovery.dipper-crypto.rc
+recovery/root/system/etc/dipper-crypto.prop
+recovery/root/system/etc/twrp.flags
+__pycache__/
+*.log

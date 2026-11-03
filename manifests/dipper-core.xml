@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+    <extend-project name="android_bootable_recovery" path="bootable/recovery" revision="8a58fc3b586b8a908337fa87529cfbbb119ec7bb" />
+    <extend-project name="android_system_vold" path="system/vold" revision="e7e26ed2ffd9ad0469a05515cfd91940a3366d19" />
+</manifest>
