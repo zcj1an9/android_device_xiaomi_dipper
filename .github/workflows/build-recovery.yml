@@ -15,8 +15,8 @@ on:
       jobs:
         description: 'Parallel compile jobs (1-4)'
         type: choice
-        options: ['2', '3', '4', '1']
-        default: '2'
+        options: ['1', '2', '3', '4']
+        default: '1'
   push:
     branches: [twrp-16.0]
     paths:
@@ -40,8 +40,12 @@ jobs:
     env:
       BUILD_MODE: ${{ inputs.mode || 'diagnostic' }}
       CRYPTO_PROFILE: ${{ inputs.crypto_profile }}
-      DIPPER_JOBS: ${{ inputs.jobs || '2' }}
+      DIPPER_JOBS: ${{ inputs.jobs || '1' }}
       DIPPER_SYNC_JOBS: '4'
+      # -j does not bound Soong's Go heap or goroutine parallelism.
+      GOMEMLIMIT: '10GiB'
+      GOGC: '50'
+      GOMAXPROCS: '2'
       ANDROID_SOURCE: ${{ github.workspace }}/android-source
     steps:
       - name: Checkout device tree
@@ -68,7 +72,7 @@ jobs:
           git config --global user.name 'Recovery Builder'
           git config --global user.email 'recovery-builder@users.noreply.github.com'
           # Bound memory pressure; Android/Soong may need more than runner RAM.
-          sudo fallocate -l 8G /swapfile-dipper
+          sudo fallocate -l 24G /swapfile-dipper
           sudo chmod 600 /swapfile-dipper
           sudo mkswap /swapfile-dipper
           sudo swapon /swapfile-dipper
@@ -83,10 +87,11 @@ jobs:
           bash device-tree/tools/sync-source.sh "$ANDROID_SOURCE" 2>&1 | tee "$GITHUB_WORKSPACE/source-sync.log"
 
       - name: Build recovery image
+        timeout-minutes: 300
         shell: bash
         run: |
           set -euo pipefail
-          bash device-tree/tools/build.sh "$ANDROID_SOURCE" 2>&1 | tee "$GITHUB_WORKSPACE/build-console.log"
+          bash device-tree/tools/ci-build.sh "$ANDROID_SOURCE"
 
       - name: Package image and provenance
         shell: bash
@@ -118,6 +123,8 @@ jobs:
           path: |
             source-sync.log
             build-console.log
+            resource-usage.log
+            runner-diagnostics.txt
             android-source/dipper-recovery-build.log
             android-source/dipper-source-lock.xml
             android-source/out/error.log
