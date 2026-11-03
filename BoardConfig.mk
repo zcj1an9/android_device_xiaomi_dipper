@@ -38,7 +38,7 @@ BOARD_FLASH_BLOCK_SIZE := 262144
 BOARD_BOOTIMAGE_PARTITION_SIZE := 67108864
 BOARD_RECOVERYIMAGE_PARTITION_SIZE := 67108864
 BOARD_HAS_LARGE_FILESYSTEM := true
-BOARD_BUILD_SYSTEM_ROOT_IMAGE := true
+# SAR mount layout is described by recovery.fstab; this build flag was removed in Android 16.
 TARGET_COPY_OUT_VENDOR := vendor
 BOARD_ROOT_EXTRA_FOLDERS := bluetooth dsp firmware persist metadata
 TARGET_USERIMAGES_USE_EXT4 := true
