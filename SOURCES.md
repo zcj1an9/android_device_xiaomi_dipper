@@ -25,3 +25,9 @@ GPL-3.0-or-later where indicated upstream; LICENSE.GPL-3.0 is included for refer
 Qualcomm/other vendor ELF files remain proprietary upstream material: no ownership
 or new license is asserted. They are fetched separately instead of republished
 as newly authored source.
+
+`tools/build.sh` applies two local adjustments to the pinned recovery checkout:
+it supplies the device's USB init contents to the core Soong prebuilt (the sole
+installer of `/init.recovery.usb.rc`), and removes the critical restart policy
+from recovery's keystore2 service. Always build through this script, including
+for manual builds, so these adjustments are applied before Soong runs.

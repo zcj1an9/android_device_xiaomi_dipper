@@ -20,6 +20,11 @@ mkdir -p device/xiaomi
 if [[ ! -e device/xiaomi/dipper ]]; then
     cp -a "$package_dir" device/xiaomi/dipper
 fi
+# Keep a single installer for /init.recovery.usb.rc: the core Soong prebuilt.
+# Feed it the device's configfs rules instead of also copying that destination
+# from PRODUCT_COPY_FILES. This runs before envsetup/Soong on local and CI builds.
+test -f bootable/recovery/etc/init.recovery.usb.rc || { echo 'Missing core USB init prebuilt'; exit 1; }
+cp device/xiaomi/dipper/recovery/root/init.recovery.usb.rc bootable/recovery/etc/init.recovery.usb.rc
 # Recovery must remain accessible if experimental keystore2 cannot load a blob.
 # This changes only the recovery service restart policy, not the installed ROM.
 python3 - <<'PY'

@@ -58,7 +58,8 @@ TW_INPUT_BLACKLIST := "hbtp_vm"
 TW_BRIGHTNESS_PATH := "/sys/class/backlight/panel0-backlight/brightness"
 TW_MAX_BRIGHTNESS := 2047
 TW_DEFAULT_BRIGHTNESS := 511
-TW_EXCLUDE_DEFAULT_USB_INIT := true
+# Install the core USB module with dipper's contents (see tools/build.sh).
+TW_EXCLUDE_DEFAULT_USB_INIT := false
 TW_INCLUDE_REPACKTOOLS := true
 TW_INCLUDE_RESETPROP := true
 RECOVERY_SDCARD_ON_DATA := true
