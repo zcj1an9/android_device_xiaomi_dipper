@@ -4,10 +4,10 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'diagnostic: boot/ADB only; decrypt: requires the actual ROM profile'
+        description: 'storage: unencrypted data; diagnostic: omit data; decrypt: actual ROM profile'
         type: choice
-        options: [diagnostic, decrypt]
-        default: diagnostic
+        options: [storage, diagnostic, decrypt]
+        default: storage
       crypto_profile:
         description: 'JSON object from ACTIONS.md; required for decrypt mode'
         type: string
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 350
     env:
-      BUILD_MODE: ${{ inputs.mode || 'diagnostic' }}
+      BUILD_MODE: ${{ inputs.mode || 'storage' }}
       CRYPTO_PROFILE: ${{ inputs.crypto_profile }}
       DIPPER_JOBS: ${{ inputs.jobs || '2' }}
       DIPPER_SYNC_JOBS: '4'
@@ -111,7 +111,7 @@ jobs:
           cp device-tree/PREBUILTS.sha256 artifacts/
           git -C device-tree rev-parse HEAD > artifacts/device-tree-commit.txt
           (cd artifacts && sha256sum *.img > SHA256SUMS)
-          echo "Built mode: $BUILD_MODE. Diagnostic mode does not decrypt data." >> "$GITHUB_STEP_SUMMARY"
+          echo "Built mode: $BUILD_MODE. Storage mode mounts unencrypted data; decrypt mode requires the actual ROM profile." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload recovery image
         if: success()
