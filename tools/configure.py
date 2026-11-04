@@ -5,6 +5,7 @@ import datetime
 import json
 import pathlib
 import re
+from partition_layout import extra_mounts, recovery_flags
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 DEVICE = ROOT
@@ -113,23 +114,15 @@ on property:sys.listeners.registered=true && property:dipper.crypto.ready=1
         flags += f',metadata_encryption={a.metadata_encryption},keydirectory={a.keydirectory}'
     for fs in ('f2fs', 'ext4'):
         lines.append(f'/dev/block/bootdevice/by-name/userdata /data {fs} noatime,nosuid,nodev {flags}')
-    lines += ['/dev/block/bootdevice/by-name/cache /cache ext4 noatime,nosuid,nodev wait',
-              '/dev/block/bootdevice/by-name/misc /misc emmc defaults defaults']
+    lines += extra_mounts(a.metadata_partition)
+    lines += ['/dev/block/bootdevice/by-name/misc /misc emmc defaults defaults']
     (DEVICE / 'recovery/recovery.fstab').write_text('\n'.join(lines) + '\n')
     # vold uses ReadDefaultFstab, independently of the TWRP fstab parser.
     # Provide a default qcom fstab as well, containing the same data/metadata options.
     default_lines = [line for line in lines if ' /data ' in line or ' /metadata ' in line]
     (root / 'fstab.qcom').write_text('\n'.join(default_lines) + '\n')
     (root / 'vendor/etc/fstab.qcom').write_text('\n'.join(default_lines) + '\n')
-    twflags = '''# mount point type block device flags
-/boot emmc /dev/block/bootdevice/by-name/boot flags=display="Boot";backup=1
-/recovery emmc /dev/block/bootdevice/by-name/recovery flags=display="Recovery";backup=1;flashimg=1
-/firmware vfat /dev/block/bootdevice/by-name/modem flags=display="Firmware";mounttodecrypt
-/persist ext4 /dev/block/bootdevice/by-name/persist flags=display="Persist";mounttodecrypt
-/usb_otg auto /dev/block/sdg1 /dev/block/sdg flags=display="USB-OTG";storage;removable
-'''
-    if a.metadata_partition != 'none':
-        twflags += f'/metadata ext4 /dev/block/bootdevice/by-name/{a.metadata_partition} flags=display="Metadata";mounttodecrypt\n'
+    twflags = recovery_flags(a.metadata_partition, decrypt=True, data=True)
     (root / 'system/etc/twrp.flags').write_text(twflags)
     print('Generated:', DEVICE / 'crypto-profile.json')
 

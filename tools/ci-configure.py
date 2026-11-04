@@ -9,8 +9,11 @@ import sys
 
 root = Path(__file__).resolve().parents[1]
 mode = os.environ.get('BUILD_MODE', 'diagnostic')
-if mode == 'diagnostic':
-    subprocess.run([sys.executable, str(root / 'tools/configure-diagnostic.py')], check=True)
+if mode in ('diagnostic', 'storage'):
+    args = [sys.executable, str(root / 'tools/configure-diagnostic.py')]
+    if mode == 'storage':
+        args.append('--mount-data')
+    subprocess.run(args, check=True)
 elif mode == 'decrypt':
     profile = json.loads(os.environ.get('CRYPTO_PROFILE', '') or '{}')
     allowed = {

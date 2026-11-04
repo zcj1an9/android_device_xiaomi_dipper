@@ -4,6 +4,8 @@ PRODUCT_SHIPPING_API_LEVEL := 27
 TARGET_SCREEN_HEIGHT := 2248
 TARGET_SCREEN_WIDTH := 1080
 PRODUCT_PACKAGES += keystore2 resetprop logcat logd
+# Include EROFS image inspection/creation tools explicitly in the recovery.
+PRODUCT_PACKAGES += fsck.erofs.recovery dump.erofs.recovery mkfs.erofs.recovery
 TARGET_RECOVERY_DEVICE_MODULES += libion
 RECOVERY_LIBRARY_SOURCE_FILES += $(TARGET_OUT_SHARED_LIBRARIES)/libion.so
 # The core's Soong prebuilt owns init.recovery.usb.rc. tools/build.sh supplies

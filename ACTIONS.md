@@ -5,8 +5,9 @@
 
 ## 触发
 
-- 提交构建脚本、设备配置或 Recovery 文件到 `twrp-16.0`：自动编译 diagnostic 镜像。
+- 提交构建脚本、设备配置或 Recovery 文件到 `twrp-16.0`：自动编译 storage 镜像。
 - 手动运行：进入仓库 Actions → Build dipper TWRP → Run workflow，选择 mode 和编译并行数。
+- `storage`（默认）：普通挂载未加密 data；适用于本机 fstab 未配置文件/metadata 加密且用户目录 fscryptpolicyget 均为 No policy set 的情况，不启动硬件解密服务。
 - `diagnostic`：不需要 crypto_profile；不挂载 data/metadata，不启动硬件密钥服务。用于先验证 Recovery 能否启动、显示、使用 ADB。其二进制仍编译解密模块，以发现相关构建错误；不是可解密 data 的成品。
 - `decrypt`：必须填写真实 ROM 的加密参数 JSON；缺少必填字段或有冲突时，在下载大体积源码前停止。
 
@@ -55,3 +56,23 @@ adb pull /tmp/dipper-recovery-logs.tar.gz
 crypto-info 也可以先在现有可用 Recovery 上运行，方法见 README。拿到真实参数后才能构建与现有 data 匹配的 decrypt 镜像；它仍需实机验证。
 
 第五轮构建已通过 USB 安装规则检查并进入实际编译，但同步后只剩约 11 GiB，编译到约 47% 时空间不足 1 GiB，日志随后中断。CI 现在在保存 `dipper-source-lock.xml` 后删除临时 Android checkout 的 `.repo/project-objects` 和 `.repo/projects`，保留已签出的源码和 manifest，并要求至少 30 GiB 可用空间才开始编译；记录见 `disk-cleanup.log`。清理后的临时 checkout 不可继续 repo sync，后续任务必须重新同步。该清理仅在 GitHub Actions 的指定临时目录执行，不用于本地构建或设备树仓库。
+
+## 分区挂载
+
+三种模式共用静态分区布局：system、vendor、cust、cache、persist、firmware（modem）、dsp、bt_firmware（bluetooth）。Cust 独立挂到 /cust，不映射为 system_ext；若解密 profile 明确把 cust 用作 metadata，则只保留 /metadata，避免同一分区重复挂载。logdump 不会自动视作 metadata。
+
+Cust、Persist、Firmware、DSP、Bluetooth Firmware 默认只读；ext4 的只读条目使用 noload。Cache 支持 ext4/F2FS。Boot、Recovery、DTBO 是镜像备份/恢复/刷写入口，不是文件系统挂载点。非 Cache 的新增辅助分区不提供擦除入口。不增加 formattable 或自动格式化配置。
+
+Storage 模式使用普通 F2FS/ext4 data 挂载参数，不根据 Android 版本猜测加密选项；对有实际加密策略的其他 ROM，应选择 diagnostic 或提供真实 decrypt profile。挂载和镜像入口需要下一轮实机验证。
+
+### 备份列表
+
+- 文件备份：System、Vendor、Data（storage/decrypt 模式）、Cache、Cust、Persist、Firmware、DSP、Bluetooth Firmware。
+- 镜像备份：Boot、Recovery、DTBO、System Image、Vendor Image、Cust Image、Persist Image、Modem Firmware Image。
+- Modem 镜像组包含 modem、bluetooth、dsp；EFS 镜像组包含 modemst1、modemst2、fsc、fsg，分区名称参考 TeamWin 的 dipper 设备树。
+- Persist、EFS、Modem 的镜像入口不加入普通镜像刷写列表，但可通过备份恢复流程恢复。只有实际存在的分区才能完成备份。
+- 文件备份和 Image 是同一分区的两种备份形式，无需默认全选。Data 文件备份沿用 TWRP 行为，不包含 /data/media 的内部存储文件；照片/下载文件需另行复制。
+
+### EROFS
+
+System、Vendor、Cust 均同时提供 ext4 与 EROFS 挂载条目；EROFS 按只读挂载，不作为可写文件系统使用。明确打包 fsck.erofs、dump.erofs、mkfs.erofs 的 Recovery 变体。可用文件备份保存分区内容，也可用 System/Vendor/Cust Image 保存原始镜像；更新 EROFS 内容应刷写新镜像。Data/Cache 继续使用 F2FS/ext4。是否能挂载某个 EROFS 镜像还取决于该镜像使用的压缩算法和内核支持的格式特性。

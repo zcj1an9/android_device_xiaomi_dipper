@@ -122,3 +122,18 @@ adb pull /tmp/dipper-recovery-logs.tar.gz
 ## 当前验证边界
 
 完成设备配置生成、配置冲突检查、脚本语法和依赖哈希检查；尚无完整 Android 构建或手机解密成功结果。编译成功也不能代替一次真实解锁验证，尤其要检查 DE 初始化、Gatekeeper auth token、keystore2 blob 解封装和 CE key 安装分别在哪一步失败。
+
+## 普通存储与更多分区
+
+本机采集的 userdata 为 F2FS，ROM fstab 未配置 fileencryption/metadata_encryption，媒体、用户和 CE/DE 目录均返回 No policy set。为此新增普通存储模式：
+
+```bash
+python3 tools/configure-diagnostic.py --mount-data
+bash tools/build.sh /path/to/android-source
+```
+
+GitHub Actions 默认选择 `storage`。原 `diagnostic` 模式继续省略 data/metadata；`decrypt` 继续要求真实加密 profile。
+
+共同增加 Cust、Persist、Firmware、DSP、Bluetooth Firmware 和 Cache 挂载入口，并提供 DTBO 镜像备份/恢复/刷写。DTBO 无法作为目录挂载。辅助固件分区默认只读，且不提供擦除入口；不修改分区大小。完整布局见 ACTIONS.md。
+
+备份列表同时增加 System/Vendor/Cust/Persist 镜像、Modem 固件镜像组和 EFS（modemst1、modemst2、fsc、fsg）组。Data 文件备份不包含内部存储 /data/media，照片等文件请另行复制。详情见 ACTIONS.md。
