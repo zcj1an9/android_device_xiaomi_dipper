@@ -26,10 +26,12 @@ Qualcomm/other vendor ELF files remain proprietary upstream material: no ownersh
 or new license is asserted. They are fetched separately instead of republished
 as newly authored source.
 
-`tools/build.sh` applies two local adjustments to the pinned recovery checkout:
+`tools/build.sh` applies local adjustments to the pinned recovery checkout:
 it supplies the device's USB init contents to the core Soong prebuilt (the sole
 installer of `/init.recovery.usb.rc`), and removes the critical restart policy
 from recovery's keystore2 service. Always build through this script, including
 for manual builds, so these adjustments are applied before Soong runs.
 
 Additional raw backup partition names (system/vendor/persist images, modem, bluetooth, dsp and EFS modemst1/modemst2/fsc/fsg) follow TeamWin/android_device_xiaomi_dipper `android-9.0` recovery.fstab: https://github.com/TeamWin/android_device_xiaomi_dipper/blob/android-9.0/recovery.fstab . Its obsolete data encryption options are not imported.
+
+`tools/fix-settings-storage.py` additionally redirects core settings to /cache/TWRP and checks mount/write failures before reporting success. This is applied to the pinned recovery source before compilation and is idempotent. Storage-mode crypto selection comes from the generated profile.

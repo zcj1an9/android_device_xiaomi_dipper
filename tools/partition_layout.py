@@ -26,8 +26,11 @@ def recovery_flags(metadata_partition='none', decrypt=False, data=False):
     lines = ['# mount point type block device flags']
     for part, title in [('boot', 'Boot'), ('recovery', 'Recovery'), ('dtbo', 'DTBO')]:
         lines.append(f'/{part} emmc {BLOCK}{part} flags=display="{title}";backup=1;flashimg=1;canbewiped=0;wipeingui=0')
-    for part, title in [('system', 'System'), ('vendor', 'Vendor')]:
-        lines.append(f'/{part} ext4 {BLOCK}{part} flags=display="{title}";backup=1')
+    # The core normalizes /system to /system_root before applying twrp.flags.
+    # Key the flags by the normalized mount so backup/wipe controls are applied.
+    for mount, part, title in [('system_root', 'system', 'System'),
+                               ('vendor', 'vendor', 'Vendor')]:
+        lines.append(f'/{mount} ext4 {BLOCK}{part} flags=display="{title}";backup=1;canbewiped=1;wipeingui=1')
     # Raw image names follow TeamWin's dipper recovery tree. Separate mount
     # points permit choosing file backup or a full partition image explicitly.
     images = [
@@ -60,13 +63,15 @@ def recovery_flags(metadata_partition='none', decrypt=False, data=False):
         if part == 'cust' and metadata_partition == 'cust':
             continue
         flags = f'display="{title}";backup=1'
-        if part != 'cache':
+        if part in ('cache', 'cust'):
+            flags += ';canbewiped=1;wipeingui=1'
+        else:
             flags += ';canbewiped=0;wipeingui=0'
         if decrypt and part in ('persist', 'modem'):
             flags += ';mounttodecrypt'
         lines.append(f'/{mount} {fs} {BLOCK}{part} flags={flags}')
     if data:
-        lines.append(f'/data f2fs {BLOCK}userdata flags=display="Data";backup=1')
+        lines.append(f'/data f2fs {BLOCK}userdata flags=display="Data";backup=1;canbewiped=1;wipeingui=1')
     if metadata_partition != 'none':
         lines.append(f'/metadata ext4 {BLOCK}{metadata_partition} flags=display="Metadata";backup=1;mounttodecrypt;canbewiped=0;wipeingui=0')
     lines.append('/usb_otg auto /dev/block/sdg1 /dev/block/sdg flags=display="USB-OTG";storage;removable')

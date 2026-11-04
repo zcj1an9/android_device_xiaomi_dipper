@@ -65,8 +65,8 @@ TW_INCLUDE_RESETPROP := true
 RECOVERY_SDCARD_ON_DATA := true
 BOARD_HAS_NO_REAL_SDCARD := true
 TARGET_RECOVERY_QCOM_RTC_FIX := true
-TW_INCLUDE_CRYPTO := true
-TW_INCLUDE_CRYPTO_FBE := true
+# crypto-profile.mk selects crypto for the actual build mode. Do not override
+# storage mode's false values here: this would re-enable FBE/keystore waits.
 TWRP_INCLUDE_LOGCAT := true
 TARGET_USES_LOGD := true
 # Do not exclude APEX or override platform/security patch versions with 2099.

@@ -19,10 +19,10 @@ for directory in ('system/etc', 'vendor/etc/vintf'):
 (r / 'crypto-profile.json').write_text(json.dumps({
     'mode': mode, 'data_mount': args.mount_data, 'hardware_crypto_services': False
 }, indent=2) + '\n')
-(r / 'crypto-profile.mk').write_text('''# Diagnostic image: compile crypto, do not decrypt existing data.
+(r / 'crypto-profile.mk').write_text(f'''# Storage mode uses plain userdata; diagnostic still compiles crypto.
 TW_USE_FSCRYPT_POLICY := 2
-TW_INCLUDE_CRYPTO := true
-TW_INCLUDE_CRYPTO_FBE := true
+TW_INCLUDE_CRYPTO := {str(not args.mount_data).lower()}
+TW_INCLUDE_CRYPTO_FBE := {str(not args.mount_data).lower()}
 TW_INCLUDE_FBE_METADATA_DECRYPT := false
 BOARD_USES_METADATA_PARTITION := false
 ''')

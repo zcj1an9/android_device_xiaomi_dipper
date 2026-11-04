@@ -61,7 +61,7 @@ crypto-info 也可以先在现有可用 Recovery 上运行，方法见 README。
 
 三种模式共用静态分区布局：system、vendor、cust、cache、persist、firmware（modem）、dsp、bt_firmware（bluetooth）。Cust 独立挂到 /cust，不映射为 system_ext；若解密 profile 明确把 cust 用作 metadata，则只保留 /metadata，避免同一分区重复挂载。logdump 不会自动视作 metadata。
 
-Cust、Persist、Firmware、DSP、Bluetooth Firmware 默认只读；ext4 的只读条目使用 noload。Cache 支持 ext4/F2FS。Boot、Recovery、DTBO 是镜像备份/恢复/刷写入口，不是文件系统挂载点。非 Cache 的新增辅助分区不提供擦除入口。不增加 formattable 或自动格式化配置。
+Cust、Persist、Firmware、DSP、Bluetooth Firmware 默认只读；ext4 的只读条目使用 noload。Cache 支持 ext4/F2FS。Boot、Recovery、DTBO 是镜像备份/恢复/刷写入口，不是文件系统挂载点。Cust 和 Cache 提供高级擦除入口；Persist、固件和 EFS 不提供擦除入口。不增加 formattable 或自动格式化配置。
 
 Storage 模式使用普通 F2FS/ext4 data 挂载参数，不根据 Android 版本猜测加密选项；对有实际加密策略的其他 ROM，应选择 diagnostic 或提供真实 decrypt profile。挂载和镜像入口需要下一轮实机验证。
 
@@ -76,3 +76,11 @@ Storage 模式使用普通 F2FS/ext4 data 挂载参数，不根据 Android 版�
 ### EROFS
 
 System、Vendor、Cust 均同时提供 ext4 与 EROFS 挂载条目；EROFS 按只读挂载，不作为可写文件系统使用。明确打包 fsck.erofs、dump.erofs、mkfs.erofs 的 Recovery 变体。可用文件备份保存分区内容，也可用 System/Vendor/Cust Image 保存原始镜像；更新 EROFS 内容应刷写新镜像。Data/Cache 继续使用 F2FS/ext4。是否能挂载某个 EROFS 镜像还取决于该镜像使用的压缩算法和内核支持的格式特性。
+
+## 设置持久保存与普通存储启动
+
+核心的 TWRP 设置路径改为 `/cache/TWRP/.twrp_settings`，读写前必须成功挂载 Cache，写入失败会返回错误并记录日志。清空 Cache 会重置 TWRP 设置。此调整不写 Persist 中的校准文件。
+
+Storage 模式明确关闭 TW_INCLUDE_CRYPTO/TW_INCLUDE_CRYPTO_FBE，设备 BoardConfig 不再覆盖生成的模式选项；keystore2.recovery 由解密核心按需引入，不再额外强制引入普通 keystore2。这避免未加密 data 被带入 FBE 初始化和 keystore2 等待。Decrypt 模式继续启用硬件解密流程。
+
+Advanced Wipe 增加 System、Vendor、Cust，并显式保留 Cache、Data；System flags 使用核心归一化后的 /system_root 路径，同时修正 System 文件备份开关。适用于实际 ext4/F2FS 文件系统。EROFS 不能按可写目录擦除，应通过对应 Image 刷写新镜像。DTBO、EFS、Persist 和固件仍仅提供各自的备份/恢复/镜像操作。

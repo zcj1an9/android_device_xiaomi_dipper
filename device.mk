@@ -3,7 +3,8 @@ LOCAL_PATH := device/xiaomi/dipper
 PRODUCT_SHIPPING_API_LEVEL := 27
 TARGET_SCREEN_HEIGHT := 2248
 TARGET_SCREEN_WIDTH := 1080
-PRODUCT_PACKAGES += keystore2 resetprop logcat logd
+# Crypto builds obtain keystore2.recovery from the core's conditional deps.
+PRODUCT_PACKAGES += resetprop logcat logd
 # Include EROFS image inspection/creation tools explicitly in the recovery.
 PRODUCT_PACKAGES += fsck.erofs.recovery dump.erofs.recovery mkfs.erofs.recovery
 TARGET_RECOVERY_DEVICE_MODULES += libion
