@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "targets": {
+    "dipper": {
+      "status": "testing",
+      "build_enabled": false,
+      "validation": "pending",
+      "repository": "zcj1an9/android_device_xiaomi_dipper",
+      "ref": "recovery-next",
+      "device_path": "device/xiaomi/dipper",
+      "product": "dipper",
+      "lunch": "twrp_dipper-bp2a-userdebug",
+      "source_lock": "dipper-source-lock.xml",
+      "modes": ["storage", "diagnostic"],
+      "pending": [
+        "Verify language survives a recovery reboot",
+        "Verify storage startup no longer waits for keystore2",
+        "Verify mounts, backup/restore and advanced wipe on the phone"
+      ]
+    },
+    "perseus": {
+      "status": "planned",
+      "build_enabled": false,
+      "validation": "pending",
+      "repository": null,
+      "ref": null,
+      "device_path": "device/xiaomi/perseus",
+      "product": "perseus",
+      "lunch": null,
+      "source_lock": null,
+      "modes": [],
+      "pending": ["Confirm device tree, kernel, partitions, display/touch and data policy"]
+    },
+    "equuleus": {
+      "status": "planned",
+      "build_enabled": false,
+      "validation": "pending",
+      "repository": null,
+      "ref": null,
+      "device_path": "device/xiaomi/equuleus",
+      "product": "equuleus",
+      "lunch": null,
+      "source_lock": null,
+      "modes": [],
+      "pending": ["Confirm device tree, kernel, partitions, display/touch and data policy"]
+    }
+  }
+}

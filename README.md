@@ -1,3 +1,5 @@
+> 当前 `recovery-next` 是多设备准备分支：暂不编译。目标为一次触发 dipper、perseus、equuleus 三个独立任务。当前三个构建开关均关闭，详见 [MULTI_DEVICE.md](MULTI_DEVICE.md)。以下硬件适配内容仍仅适用于 dipper。
+
 # TWRP device tree for Xiaomi Mi 8 (dipper)
 
 仓库建议命名：`android_device_xiaomi_dipper`；分支：`twrp-16.0`；Android 源码内路径：`device/xiaomi/dipper`。

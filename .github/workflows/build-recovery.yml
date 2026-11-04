@@ -1,45 +1,81 @@
-name: Build dipper TWRP
+name: Plan or build Xiaomi recoveries
 
+# Staging branch: manual planning only by default. No push/PR build trigger.
 on:
   workflow_dispatch:
     inputs:
-      mode:
-        description: 'storage: unencrypted data; diagnostic: omit data; decrypt: actual ROM profile'
-        type: choice
-        options: [storage, diagnostic, decrypt]
-        default: storage
-      crypto_profile:
-        description: 'JSON object from ACTIONS.md; required for decrypt mode'
+      devices:
+        description: 'Comma-separated devices; all requested devices must be ready'
         type: string
-        required: false
+        default: 'dipper,perseus,equuleus'
+      execute:
+        description: 'Compile only after every selected target is enabled and validated'
+        type: boolean
+        default: false
+      mode:
+        description: 'Each device must validate this mode independently'
+        type: choice
+        options: [storage, diagnostic]
+        default: storage
+      max_parallel:
+        description: 'Maximum concurrent device builds'
+        type: choice
+        options: ['1', '2', '3']
+        default: '3'
       jobs:
-        description: 'Parallel compile jobs (1-4)'
+        description: 'Compile jobs inside each independent runner'
         type: choice
         options: ['1', '2', '3', '4']
         default: '2'
-  push:
-    branches: [twrp-16.0]
-    paths:
-      - '.github/workflows/build-recovery.yml'
-      - 'tools/**'
-      - 'manifests/**'
-      - '*.mk'
-      - 'recovery/root/**'
 
 permissions:
   contents: read
 
 concurrency:
-  group: dipper-recovery-${{ github.ref }}
+  group: xiaomi-recovery-batch-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
+  plan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      ready: ${{ steps.matrix.outputs.ready }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout build orchestration
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+      - name: Validate all requested devices without building
+        id: matrix
+        shell: bash
+        env:
+          REQUESTED_DEVICES: ${{ inputs.devices }}
+          REQUESTED_MODE: ${{ inputs.mode }}
+          RUN_BUILD: ${{ inputs.execute }}
+        run: |
+          set -euo pipefail
+          args=(--devices "$REQUESTED_DEVICES" --mode "$REQUESTED_MODE" --output "$GITHUB_OUTPUT" --summary "$GITHUB_STEP_SUMMARY")
+          if [[ "$RUN_BUILD" == true ]]; then args+=(--require-ready); fi
+          python3 tools/plan-recoveries.py "${args[@]}"
+
   recovery:
+    name: Build ${{ matrix.device }}
+    needs: plan
+    if: ${{ inputs.execute && needs.plan.outputs.ready == 'true' }}
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max_parallel) }}
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ubuntu-24.04
     timeout-minutes: 350
     env:
-      BUILD_MODE: ${{ inputs.mode || 'storage' }}
-      CRYPTO_PROFILE: ${{ inputs.crypto_profile }}
+      BUILD_MODE: ${{ matrix.mode }}
+      CRYPTO_PROFILE: ''
+      RECOVERY_DEVICE_PRODUCT: ${{ matrix.product }}
+      TARGET_SOURCE_LOCK: ${{ matrix.source_lock }}
+      DIPPER_LUNCH: ${{ matrix.lunch }}
       DIPPER_JOBS: ${{ inputs.jobs || '2' }}
       DIPPER_SYNC_JOBS: '4'
       # -j does not bound Soong's Go heap or goroutine parallelism.
@@ -52,10 +88,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: device-tree
-          ref: twrp-16.0
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.ref }}
 
-      - name: Validate requested crypto profile
-        run: python3 device-tree/tools/ci-configure.py
+      - name: Validate device tree contract and configure mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f device-tree/AndroidProducts.mk
+          test -f device-tree/PREBUILTS.sha256
+          grep -Fq "twrp_$RECOVERY_DEVICE_PRODUCT" device-tree/AndroidProducts.mk
+          python3 device-tree/tools/ci-configure.py
 
       - name: Prepare ephemeral runner
         shell: bash
@@ -105,19 +148,19 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          cp "$ANDROID_SOURCE/out/target/product/dipper/recovery.img" "artifacts/twrp-dipper-$BUILD_MODE.img"
+          cp "$ANDROID_SOURCE/out/target/product/$RECOVERY_DEVICE_PRODUCT/recovery.img" "artifacts/twrp-$RECOVERY_DEVICE_PRODUCT-$BUILD_MODE.img"
           cp device-tree/crypto-profile.json artifacts/
-          cp "$ANDROID_SOURCE/dipper-source-lock.xml" artifacts/
+          cp "$ANDROID_SOURCE/$TARGET_SOURCE_LOCK" artifacts/
           cp device-tree/PREBUILTS.sha256 artifacts/
           git -C device-tree rev-parse HEAD > artifacts/device-tree-commit.txt
           (cd artifacts && sha256sum *.img > SHA256SUMS)
-          echo "Built mode: $BUILD_MODE. Storage mode mounts unencrypted data; decrypt mode requires the actual ROM profile." >> "$GITHUB_STEP_SUMMARY"
+          echo "Built device: $RECOVERY_DEVICE_PRODUCT, mode: $BUILD_MODE. Storage mode mounts unencrypted data; decrypt mode requires the actual ROM profile." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload recovery image
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: twrp-dipper-${{ env.BUILD_MODE }}-${{ github.run_number }}
+          name: twrp-${{ matrix.device }}-${{ env.BUILD_MODE }}-${{ github.run_number }}
           path: artifacts/
           if-no-files-found: error
           retention-days: 14
@@ -126,15 +169,15 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dipper-build-logs-${{ github.run_number }}
+          name: ${{ matrix.device }}-build-logs-${{ github.run_number }}
           path: |
             source-sync.log
             disk-cleanup.log
             build-console.log
             resource-usage.log
             runner-diagnostics.txt
-            android-source/dipper-recovery-build.log
-            android-source/dipper-source-lock.xml
+            android-source/${{ matrix.product }}-recovery-build.log
+            android-source/${{ matrix.source_lock }}
             android-source/out/error.log
             android-source/out/soong.log
             device-tree/crypto-profile.json
