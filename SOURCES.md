@@ -35,3 +35,5 @@ for manual builds, so these adjustments are applied before Soong runs.
 Additional raw backup partition names (system/vendor/persist images, modem, bluetooth, dsp and EFS modemst1/modemst2/fsc/fsg) follow TeamWin/android_device_xiaomi_dipper `android-9.0` recovery.fstab: https://github.com/TeamWin/android_device_xiaomi_dipper/blob/android-9.0/recovery.fstab . Its obsolete data encryption options are not imported.
 
 `tools/fix-settings-storage.py` additionally redirects core settings to /cache/TWRP and checks mount/write failures before reporting success. This is applied to the pinned recovery source before compilation and is idempotent. Storage-mode crypto selection comes from the generated profile.
+
+`tools/fix-runtime-review.py` applies checked, repeatable edits to the pinned core: Android installation detection based on files and e2fsck exit-code semantics. Device configuration selects sysfs battery reporting, non-A/B behavior, libresetprop and unconditional task profiles. See REVIEW-20261105.md.

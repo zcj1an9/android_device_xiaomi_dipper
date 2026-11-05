@@ -21,6 +21,8 @@ TARGET_BOARD_PLATFORM := sdm845
 TARGET_BOARD_PLATFORM_GPU := qcom-adreno630
 TARGET_BOOTLOADER_BOARD_NAME := sdm845
 TARGET_NO_BOOTLOADER := true
+# Dipper has dedicated boot/recovery partitions, not A/B slots.
+AB_OTA_UPDATER := false
 
 BOARD_BOOT_HEADER_VERSION := 1
 BOARD_BOOTIMG_HEADER_VERSION := 1
@@ -62,6 +64,10 @@ TW_DEFAULT_BRIGHTNESS := 511
 TW_EXCLUDE_DEFAULT_USB_INIT := false
 TW_INCLUDE_REPACKTOOLS := true
 TW_INCLUDE_RESETPROP := true
+TW_INCLUDE_LIBRESETPROP := true
+# Read the real gauge instead of the health HAL's synthetic 100% fallback.
+TW_CUSTOM_BATTERY_PATH := "/sys/class/power_supply/battery"
+TW_USE_LEGACY_BATTERY_SERVICES := true
 RECOVERY_SDCARD_ON_DATA := true
 BOARD_HAS_NO_REAL_SDCARD := true
 TARGET_RECOVERY_QCOM_RTC_FIX := true
