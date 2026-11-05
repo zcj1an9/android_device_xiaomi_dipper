@@ -5,6 +5,8 @@ TARGET_SCREEN_HEIGHT := 2248
 TARGET_SCREEN_WIDTH := 1080
 # Crypto builds obtain keystore2.recovery from the core's conditional deps.
 PRODUCT_PACKAGES += resetprop logcat logd
+# logd requires this even when storage mode excludes the crypto dependencies.
+PRODUCT_PACKAGES += task_profiles.json.recovery
 # Include EROFS image inspection/creation tools explicitly in the recovery.
 PRODUCT_PACKAGES += fsck.erofs.recovery dump.erofs.recovery mkfs.erofs.recovery
 TARGET_RECOVERY_DEVICE_MODULES += libion

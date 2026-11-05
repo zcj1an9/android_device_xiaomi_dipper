@@ -26,6 +26,7 @@ fi
 test -f bootable/recovery/etc/init.recovery.usb.rc || { echo 'Missing core USB init prebuilt'; exit 1; }
 cp device/xiaomi/dipper/recovery/root/init.recovery.usb.rc bootable/recovery/etc/init.recovery.usb.rc
 python3 "$package_dir/tools/fix-settings-storage.py" bootable/recovery
+python3 "$package_dir/tools/fix-runtime-review.py" bootable/recovery
 # Recovery must remain accessible if experimental keystore2 cannot load a blob.
 # This changes only the recovery service restart policy, not the installed ROM.
 python3 - <<'PY'
