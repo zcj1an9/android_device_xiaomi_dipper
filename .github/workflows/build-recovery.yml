@@ -52,7 +52,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: device-tree
-          ref: twrp-16.0
+          ref: ${{ github.sha }}
 
       - name: Validate requested crypto profile
         run: python3 device-tree/tools/ci-configure.py
