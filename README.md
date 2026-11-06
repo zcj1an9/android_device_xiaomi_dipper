@@ -137,3 +137,14 @@ GitHub Actions 默认选择 `storage`。原 `diagnostic` 模式继续省略 data
 共同增加 Cust、Persist、Firmware、DSP、Bluetooth Firmware 和 Cache 挂载入口，并提供 DTBO 镜像备份/恢复/刷写。DTBO 无法作为目录挂载。辅助固件分区默认只读，且不提供擦除入口；不修改分区大小。完整布局见 ACTIONS.md。
 
 备份列表同时增加 System/Vendor/Cust/Persist 镜像、Modem 固件镜像组和 EFS（modemst1、modemst2、fsc、fsg）组。Data 文件备份不包含内部存储 /data/media，照片等文件请另行复制。详情见 ACTIONS.md。
+
+
+## 启动画面署名与展示时间
+
+GUI2 启动画面保留上游 Logo、实际版本和设备名称，在版本上方加入 `ZC_J1an9`。
+正常启动进入主页前，启动画面至少展示 4 秒，再执行上游约 0.3 秒淡出动画；
+如果初始化本来就超过 4 秒，不额外等待。解密、系统只读确认和脚本进度页面沿用上游流程。
+
+本地和 CI 的 `tools/build.sh` 都会运行 `tools/fix-splash-branding.py`，
+只对清单固定的 GUI2 源码应用补丁；可重复执行，遇到未识别的源码会在编译前停止。
+没有添加 init sleep，也没有延迟后台的挂载、设置读取或服务初始化。
