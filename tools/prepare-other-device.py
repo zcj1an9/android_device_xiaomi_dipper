@@ -8,6 +8,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import zlib
 
 ROOT = Path(__file__).resolve().parents[1]
 BASE_COMMIT = 'aee2411485463c7f3389a40caf95f7404ef2b240'
@@ -24,9 +25,19 @@ def setvar(text, name, value):
     return text + f'\n{name} := {value}\n'
 
 
-def prepare(device, base, hardware, target):
+def prepare(device, base, hardware, target, built_kernel, kernel_meta):
     profiles = json.loads((ROOT / 'devices/bringup-targets.json').read_text())
     profile = profiles[device]
+    provenance_kernel = json.loads(kernel_meta.read_text())
+    kernel_bytes = built_kernel.read_bytes()
+    # Read the first gzip member; appended DTBs are not gzip members.
+    kernel_image = zlib.decompressobj(16 + zlib.MAX_WBITS).decompress(kernel_bytes)
+    release = re.search(rb'Linux version (4[.]19[.][^ \x00]+)', kernel_image)
+    if (profile.get('kernel_version') != '4.19' or not release
+            or provenance_kernel.get('device') != device
+            or provenance_kernel.get('commit') != profile['kernel_commit']
+            or provenance_kernel.get('sha256') != hashlib.sha256(kernel_bytes).hexdigest()):
+        raise ValueError('A source-built device-specific 4.19 kernel is required')
     if git_head(base) != BASE_COMMIT or git_head(hardware) != profile['commit']:
         raise ValueError('Source checkout does not match pinned provenance')
     if target.exists():
@@ -74,7 +85,7 @@ def prepare(device, base, hardware, target):
     p.write_text(setvar(p.read_text(), 'PRODUCT_MODEL', profile['model']))
     kernel = target / 'prebuilt/Image.gz-dtb'
     kernel.parent.mkdir(exist_ok=True)
-    shutil.copy2(hardware / profile['kernel'], kernel)
+    shutil.copy2(built_kernel, kernel)
     usb = target / 'recovery/root/init.recovery.usb.rc'
     shutil.copy2(hardware / 'recovery/root/init.recovery.usb.rc', usb)
     # First build excludes userdata and vendor crypto HALs. Its filesystem and
@@ -138,7 +149,8 @@ on boot
     (target / 'recovery/recovery.fstab').write_text('\n'.join(fstab) + '\n')
     (root / 'system/etc/twrp.flags').write_text('\n'.join(flags) + '\n')
     provenance = dict(profile, shared_tree_commit=BASE_COMMIT, mode='bringup',
-                      dtbo_partition_modified=False, hardware_tested=False)
+                      dtbo_partition_modified=False, hardware_tested=False,
+                      built_kernel=provenance_kernel)
     (target / 'DEVICE_PROVENANCE.json').write_text(json.dumps(provenance, indent=2) + '\n')
     shutil.copy2(hardware / 'BoardConfig.mk', target / 'UPSTREAM-BoardConfig.mk.reference')
     shutil.copy2(hardware / profile['fstab'], target / 'UPSTREAM-fstab.reference')
@@ -149,7 +161,7 @@ on boot
     (target / 'README.md').write_text(f'''# TWRP hardware bring-up: {device}
 
 Generated from tested shared tree {BASE_COMMIT} and {profile['repository']} at {profile['commit']}.
-Device kernel, display/brightness and USB init are specific to {device}.
+Source-built 4.19 kernel, display/brightness and USB init are specific to {device}.
 Data mounting/decryption and destructive partition actions are excluded in this first hardware test.
 Existing phone DTBO is retained. Perseus's appended DTBs are SoC base trees; its external device DTBO must match this kernel. No DTBO is packaged or flashed.
 Full build and hardware behavior are pending; this is not a verified Android 17 decrypting recovery.
@@ -165,5 +177,8 @@ if __name__ == '__main__':
     p.add_argument('--base', type=Path, required=True)
     p.add_argument('--hardware', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--kernel', type=Path, required=True)
+    p.add_argument('--kernel-meta', type=Path, required=True)
     a = p.parse_args()
-    prepare(a.device, a.base.resolve(), a.hardware.resolve(), a.output.resolve())
+    prepare(a.device, a.base.resolve(), a.hardware.resolve(), a.output.resolve(),
+            a.kernel.resolve(), a.kernel_meta.resolve())
