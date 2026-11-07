@@ -81,7 +81,7 @@ jobs:
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/share/swift
           sudo rm -rf /opt/hostedtoolcache/CodeQL /usr/local/share/powershell /opt/az
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gperf lib32ncurses-dev lib32z1-dev libelf-dev liblz4-tool libssl-dev libxml2-utils lzop python3 rsync unzip xsltproc zip zlib1g-dev clang-14 lld-14 llvm-14 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gperf lib32ncurses-dev lib32z1-dev libelf-dev liblz4-tool libssl-dev libxml2-utils lzop python3 rsync unzip xsltproc zip zlib1g-dev clang-14 lld-14 llvm-14 binutils-aarch64-linux-gnu binutils-arm-linux-gnueabi
           mkdir -p "$HOME/.local/bin"
           curl --fail --location --retry 4 https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/.local/bin/repo"
           chmod +x "$HOME/.local/bin/repo"
