@@ -20,7 +20,7 @@ permissions:
 
 concurrency:
   group: other-recoveries-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   recovery:
@@ -54,6 +54,10 @@ jobs:
         with:
           path: orchestration
           ref: ${{ github.sha }}
+
+      - name: Require device-specific 4.19 kernel inputs
+        run: |
+          python3 -c "import json; p=json.load(open('orchestration/devices/bringup-targets.json')); assert all(x.get('kernel_version') == '4.19' for x in p.values()), 'Build stopped: device-specific 4.19 kernel inputs are not configured yet'"
 
       - name: Checkout tested shared recovery tooling
         uses: actions/checkout@v4
