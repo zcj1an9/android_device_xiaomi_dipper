@@ -2,7 +2,6 @@
   "equuleus": {
     "repository": "TeamWin/android_device_xiaomi_equuleus",
     "commit": "1e9ac6ba13a2358fe06b93faae654f442810efb0",
-    "kernel": "Image.gz-dtb",
     "screen_height": 2248,
     "brightness": 1023,
     "default_brightness": 420,
@@ -11,17 +10,18 @@
     "model": "MI 8 Pro",
     "boot_header": 0,
     "blobs": {
-      "Image.gz-dtb": "100689a52dc5ef35c47580ab8071790c2568c45f",
       "BoardConfig.mk": "1ad822ee7e3192d0c37a2bedf0efba3ae7e4c98c",
       "recovery/root/init.recovery.usb.rc": "66fe013920b2af045bc0812eea4e1f1322c5e5d1",
       "recovery/root/system/etc/twrp.fstab": "003d2110179442facf86c0d166260c226cc89cc2"
     },
-    "fstab": "recovery/root/system/etc/twrp.fstab"
+    "fstab": "recovery/root/system/etc/twrp.fstab",
+    "kernel_version": "4.19",
+    "kernel_repository": "zcj1an9/android_kernel_xiaomi_sdm845_419",
+    "kernel_commit": "49f75ba72af749092196b29348b98dbd1d8a19eb"
   },
   "perseus": {
     "repository": "TeamWin/android_device_xiaomi_perseus",
     "commit": "423e66a4fac77815b26063e1ad5a17e33aaf002b",
-    "kernel": "prebuilt/Image.gz-dtb",
     "screen_height": 2340,
     "brightness": 2047,
     "default_brightness": 1200,
@@ -30,11 +30,13 @@
     "model": "MI MIX 3",
     "boot_header": 0,
     "blobs": {
-      "prebuilt/Image.gz-dtb": "10dbe6899c5cb5edf96cf359c9c2a6d536ade509",
       "BoardConfig.mk": "8f686c7c8dbfebb583251842e7940c485d5bd708",
       "recovery/root/init.recovery.usb.rc": "14fec8d74764c54a6849da12d3d5e4def7dcd95e",
       "recovery.fstab": "da727f6c61523ef41f2b8fd13cb6b739e1cc64e6"
     },
-    "fstab": "recovery.fstab"
+    "fstab": "recovery.fstab",
+    "kernel_version": "4.19",
+    "kernel_repository": "zcj1an9/android_kernel_xiaomi_sdm845_419",
+    "kernel_commit": "49f75ba72af749092196b29348b98dbd1d8a19eb"
   }
 }
