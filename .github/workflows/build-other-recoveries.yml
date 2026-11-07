@@ -1,0 +1,164 @@
+name: Build equuleus and perseus TWRP bring-up
+
+on:
+  workflow_dispatch:
+    inputs:
+      jobs:
+        description: 'Compile jobs per device runner'
+        type: choice
+        options: ['1', '2', '3', '4']
+        default: '2'
+  push:
+    branches: [recovery-next]
+    paths:
+      - '.github/workflows/build-other-recoveries.yml'
+      - 'tools/prepare-other-device.py'
+      - 'devices/bringup-targets.json'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: other-recoveries-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  recovery:
+    name: Build ${{ matrix.device }}
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        include:
+          - device: equuleus
+            repository: TeamWin/android_device_xiaomi_equuleus
+            ref: 1e9ac6ba13a2358fe06b93faae654f442810efb0
+          - device: perseus
+            repository: TeamWin/android_device_xiaomi_perseus
+            ref: 423e66a4fac77815b26063e1ad5a17e33aaf002b
+    runs-on: ubuntu-24.04
+    timeout-minutes: 350
+    env:
+      BUILD_MODE: bringup
+      CRYPTO_PROFILE: ''
+      DIPPER_JOBS: ${{ inputs.jobs || '2' }}
+      DIPPER_SYNC_JOBS: '4'
+      # -j does not bound Soong's Go heap or goroutine parallelism.
+      GOMEMLIMIT: '10GiB'
+      GOGC: '50'
+      GOMAXPROCS: '2'
+      ANDROID_SOURCE: ${{ github.workspace }}/android-source
+    steps:
+      - name: Checkout build orchestration
+        uses: actions/checkout@v4
+        with:
+          path: orchestration
+          ref: ${{ github.sha }}
+
+      - name: Checkout tested shared recovery tooling
+        uses: actions/checkout@v4
+        with:
+          path: shared-tree
+          ref: aee2411485463c7f3389a40caf95f7404ef2b240
+
+      - name: Checkout device-specific hardware
+        uses: actions/checkout@v4
+        with:
+          path: hardware-tree
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.ref }}
+
+      - name: Prepare and verify isolated device tree
+        env:
+          RECOVERY_DEVICE: ${{ matrix.device }}
+        run: |
+          python3 orchestration/tools/prepare-other-device.py --device "$RECOVERY_DEVICE" --base shared-tree --hardware hardware-tree --output device-tree
+
+      - name: Validate requested crypto profile
+        run: python3 device-tree/tools/ci-configure.py
+
+      - name: Prepare ephemeral runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Only unused SDKs on this disposable Actions runner are removed.
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/share/swift
+          sudo rm -rf /opt/hostedtoolcache/CodeQL /usr/local/share/powershell /opt/az
+          sudo apt-get update
+          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gperf lib32ncurses-dev lib32z1-dev libelf-dev liblz4-tool libssl-dev libxml2-utils lzop python3 rsync unzip xsltproc zip zlib1g-dev
+          mkdir -p "$HOME/.local/bin"
+          curl --fail --location --retry 4 https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/.local/bin/repo"
+          chmod +x "$HOME/.local/bin/repo"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          git config --global user.name 'Recovery Builder'
+          git config --global user.email 'recovery-builder@users.noreply.github.com'
+          # Bound memory pressure; Android/Soong may need more than runner RAM.
+          sudo fallocate -l 24G /swapfile-dipper
+          sudo chmod 600 /swapfile-dipper
+          sudo mkswap /swapfile-dipper
+          sudo swapon /swapfile-dipper
+          df -h
+          free -h
+          test "$(df --output=avail -B1 "$GITHUB_WORKSPACE" | tail -1)" -gt 55000000000
+
+      - name: Sync pinned recovery sources and prebuilts
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash device-tree/tools/sync-source.sh "$ANDROID_SOURCE" 2>&1 | tee "$GITHUB_WORKSPACE/source-sync.log"
+
+      - name: Reclaim synced Git storage and check build headroom
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash device-tree/tools/ci-reclaim-space.sh "$ANDROID_SOURCE" 2>&1 | tee "$GITHUB_WORKSPACE/disk-cleanup.log"
+
+      - name: Build recovery image
+        timeout-minutes: 300
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash device-tree/tools/ci-build.sh "$ANDROID_SOURCE"
+
+      - name: Package image and provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          cp "$ANDROID_SOURCE/out/target/product/${{ matrix.device }}/recovery.img" "artifacts/twrp-${{ matrix.device }}-$BUILD_MODE.img"
+          cp device-tree/crypto-profile.json device-tree/DEVICE_PROVENANCE.json artifacts/
+          cp device-tree/UPSTREAM-*.reference artifacts/
+          tar -czf artifacts/device-tree-source.tar.gz -C device-tree .
+          cp "$ANDROID_SOURCE/${{ matrix.device }}-source-lock.xml" artifacts/
+          cp device-tree/PREBUILTS.sha256 artifacts/
+          git -C device-tree rev-parse HEAD > artifacts/device-tree-commit.txt
+          (cd artifacts && sha256sum *.img > SHA256SUMS)
+          echo "Device ${{ matrix.device }} bring-up image: userdata/decryption excluded; phone DTBO retained; hardware testing pending." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload recovery image
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: twrp-${{ matrix.device }}-${{ env.BUILD_MODE }}-${{ github.run_number }}
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload build logs even on failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.device }}-build-logs-${{ github.run_number }}
+          path: |
+            source-sync.log
+            disk-cleanup.log
+            build-console.log
+            resource-usage.log
+            runner-diagnostics.txt
+            android-source/${{ matrix.device }}-recovery-build.log
+            android-source/${{ matrix.device }}-source-lock.xml
+            android-source/out/error.log
+            android-source/out/soong.log
+            device-tree/crypto-profile.json
+          if-no-files-found: warn
+          retention-days: 14
