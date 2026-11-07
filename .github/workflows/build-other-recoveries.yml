@@ -13,6 +13,7 @@ on:
     paths:
       - '.github/workflows/build-other-recoveries.yml'
       - 'tools/prepare-other-device.py'
+      - 'tools/validate-recovery-layout.py'
       - 'tools/build-recovery-kernel.sh'
       - 'devices/bringup-targets.json'
 
@@ -72,6 +73,9 @@ jobs:
           path: hardware-tree
           repository: ${{ matrix.repository }}
           ref: ${{ matrix.ref }}
+
+      - name: Validate boot layout before expensive builds
+        run: python3 orchestration/tools/validate-recovery-layout.py --base shared-tree --device "${{ matrix.device }}"
 
       - name: Prepare ephemeral runner
         shell: bash

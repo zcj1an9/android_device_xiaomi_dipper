@@ -25,6 +25,28 @@ def setvar(text, name, value):
     return text + f'\n{name} := {value}\n'
 
 
+def prepare_board(device, profile, board):
+    board = board.replace('dipper', device)
+    values = {
+        'BOARD_BOOT_HEADER_VERSION': profile['boot_header'],
+        'BOARD_BOOTIMG_HEADER_VERSION': profile['boot_header'],
+        # AOSP checks this with ifdef; even the string false enables it.
+        'BOARD_INCLUDE_RECOVERY_DTBO': '',
+        'BOARD_MKBOOTIMG_ARGS': '--header_version 0 --ramdisk_offset 0x01000000 --tags_offset 0x00000100',
+        'TARGET_OTA_ASSERT_DEVICE': device,
+        'TW_MAX_BRIGHTNESS': profile['brightness'],
+        'TW_DEFAULT_BRIGHTNESS': profile['default_brightness'],
+        'TW_Y_OFFSET': profile['y_offset'], 'TW_H_OFFSET': profile['h_offset'],
+    }
+    board = re.sub(r'^BOARD_MKBOOTIMG_ARGS\s*\+=.*\n', '', board, flags=re.M)
+    for key, value in values.items():
+        board = setvar(board, key, value)
+    # Keep device DTBOs in their separate partition, not in header-v0 recovery.
+    if device == 'equuleus':
+        board += 'LZMA_RAMDISK_TARGETS := recovery\n'
+    return board
+
+
 def prepare(device, base, hardware, target, built_kernel, kernel_meta):
     profiles = json.loads((ROOT / 'devices/bringup-targets.json').read_text())
     profile = profiles[device]
@@ -61,23 +83,7 @@ def prepare(device, base, hardware, target, built_kernel, kernel_meta):
     for path in sorted(target.rglob('*'), key=lambda p: len(p.parts), reverse=True):
         if 'dipper' in path.name:
             path.rename(path.with_name(path.name.replace('dipper', device)))
-    board = (target / 'BoardConfig.mk').read_text()
-    values = {
-        'BOARD_BOOT_HEADER_VERSION': profile['boot_header'],
-        'BOARD_BOOTIMG_HEADER_VERSION': profile['boot_header'],
-        'BOARD_MKBOOTIMG_ARGS': '--header_version 0 --ramdisk_offset 0x01000000 --tags_offset 0x00000100',
-        'TARGET_OTA_ASSERT_DEVICE': device,
-        'TW_MAX_BRIGHTNESS': profile['brightness'],
-        'TW_DEFAULT_BRIGHTNESS': profile['default_brightness'],
-        'TW_Y_OFFSET': profile['y_offset'], 'TW_H_OFFSET': profile['h_offset'],
-    }
-    board = re.sub(r'^BOARD_MKBOOTIMG_ARGS\s*\+=.*\n', '', board, flags=re.M)
-    for key, value in values.items():
-        board = setvar(board, key, value)
-    # The upstream kernels use appended DTBs; do not package or flash a DTBO.
-    board += '\n# Keep the phone DTBO partition; no bundled DTBO image.\nBOARD_INCLUDE_RECOVERY_DTBO := false\n'
-    if device == 'equuleus':
-        board += 'LZMA_RAMDISK_TARGETS := recovery\n'
+    board = prepare_board(device, profile, (target / 'BoardConfig.mk').read_text())
     (target / 'BoardConfig.mk').write_text(board)
     p = target / 'device.mk'
     p.write_text(setvar(p.read_text(), 'TARGET_SCREEN_HEIGHT', profile['screen_height']))
