@@ -47,3 +47,14 @@ LZMA ramdisk 配置。镜像打包后必须检查非空且不超过 64 MiB，失
 
 设备真机测试尚未完成；老的 targets.json 保持 validation=pending，避免伪造已验证状态。
 本工作流直接执行明确的 bringup 矩阵，不经过正式 storage/decrypt 验证入口。
+
+## 4.19-only 更新
+
+两台内核均从 zcj1an9/android_kernel_xiaomi_sdm845_419 的稳定 test 提交
+49f75ba72af749092196b29348b98dbd1d8a19eb 编译，使用 LLVM/Clang 14 和每台自己的 config。
+三个既有外部依赖只在一次性 CI 内核目录同步到固定提交，不添加到内核 GitHub 仓库。
+TeamWin 树只提供硬件参数、USB 及分区参考，其旧预编译内核不进入产物。
+准备脚本会检查内核 gzip 内容中的 Linux 4.19 版本、设备名称、源码提交和 SHA256；
+缺少有效 4.19 内核时停止，不回退到旧内核。
+perseus 保留 DT_OVERLAY 方案，生成的六份设备 overlay 及源码随镜像保存。
+本次仍不写手机 DTBO，也不根据猜测的板号制作可刷 DTBO 表；应与手机现有 DTBO 核对。
