@@ -13,6 +13,7 @@ on:
     paths:
       - '.github/workflows/build-other-recoveries.yml'
       - 'tools/prepare-other-device.py'
+      - 'tools/build-recovery-kernel.sh'
       - 'devices/bringup-targets.json'
 
 permissions:
@@ -37,7 +38,7 @@ jobs:
             repository: TeamWin/android_device_xiaomi_perseus
             ref: 423e66a4fac77815b26063e1ad5a17e33aaf002b
     runs-on: ubuntu-24.04
-    timeout-minutes: 350
+    timeout-minutes: 360
     env:
       BUILD_MODE: bringup
       CRYPTO_PROFILE: ''
@@ -72,15 +73,6 @@ jobs:
           repository: ${{ matrix.repository }}
           ref: ${{ matrix.ref }}
 
-      - name: Prepare and verify isolated device tree
-        env:
-          RECOVERY_DEVICE: ${{ matrix.device }}
-        run: |
-          python3 orchestration/tools/prepare-other-device.py --device "$RECOVERY_DEVICE" --base shared-tree --hardware hardware-tree --output device-tree
-
-      - name: Validate requested crypto profile
-        run: python3 device-tree/tools/ci-configure.py
-
       - name: Prepare ephemeral runner
         shell: bash
         run: |
@@ -89,7 +81,7 @@ jobs:
           sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/share/swift
           sudo rm -rf /opt/hostedtoolcache/CodeQL /usr/local/share/powershell /opt/az
           sudo apt-get update
-          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gperf lib32ncurses-dev lib32z1-dev libelf-dev liblz4-tool libssl-dev libxml2-utils lzop python3 rsync unzip xsltproc zip zlib1g-dev
+          sudo apt-get install -y bc bison build-essential ccache curl flex g++-multilib gcc-multilib git gperf lib32ncurses-dev lib32z1-dev libelf-dev liblz4-tool libssl-dev libxml2-utils lzop python3 rsync unzip xsltproc zip zlib1g-dev clang-14 lld-14 llvm-14 gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
           mkdir -p "$HOME/.local/bin"
           curl --fail --location --retry 4 https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/.local/bin/repo"
           chmod +x "$HOME/.local/bin/repo"
@@ -104,6 +96,23 @@ jobs:
           df -h
           free -h
           test "$(df --output=avail -B1 "$GITHUB_WORKSPACE" | tail -1)" -gt 55000000000
+
+      - name: Build device-specific 4.19 recovery kernel
+        timeout-minutes: 120
+        env:
+          RECOVERY_DEVICE: ${{ matrix.device }}
+        run: |
+          set -euo pipefail
+          bash orchestration/tools/build-recovery-kernel.sh "$RECOVERY_DEVICE" "$GITHUB_WORKSPACE/kernel-build-$RECOVERY_DEVICE"
+
+      - name: Prepare and verify isolated device tree
+        env:
+          RECOVERY_DEVICE: ${{ matrix.device }}
+        run: |
+          python3 orchestration/tools/prepare-other-device.py --device "$RECOVERY_DEVICE" --base shared-tree --hardware hardware-tree --output device-tree --kernel kernel-build-${{ matrix.device }}/Image.gz-dtb --kernel-meta kernel-build-${{ matrix.device }}/kernel-provenance.json
+
+      - name: Validate requested crypto profile
+        run: python3 device-tree/tools/ci-configure.py
 
       - name: Sync pinned recovery sources and prebuilts
         shell: bash
@@ -131,6 +140,8 @@ jobs:
           mkdir -p artifacts
           cp "$ANDROID_SOURCE/out/target/product/${{ matrix.device }}/recovery.img" "artifacts/twrp-${{ matrix.device }}-$BUILD_MODE.img"
           cp device-tree/crypto-profile.json device-tree/DEVICE_PROVENANCE.json artifacts/
+          cp kernel-build-${{ matrix.device }}/kernel-provenance.json kernel-build-${{ matrix.device }}/kernel.config kernel-build-${{ matrix.device }}/kernel-release.txt kernel-build-${{ matrix.device }}/kernel-device-trees.tar.gz artifacts/
+          cp -a kernel-build-${{ matrix.device }}/overlays artifacts/
           cp device-tree/UPSTREAM-*.reference artifacts/
           tar -czf artifacts/device-tree-source.tar.gz -C device-tree .
           cp "$ANDROID_SOURCE/${{ matrix.device }}-source-lock.xml" artifacts/
@@ -154,6 +165,8 @@ jobs:
         with:
           name: ${{ matrix.device }}-build-logs-${{ github.run_number }}
           path: |
+            kernel-build-${{ matrix.device }}/kernel-build.log
+            kernel-build-${{ matrix.device }}/kernel-provenance.json
             source-sync.log
             disk-cleanup.log
             build-console.log
