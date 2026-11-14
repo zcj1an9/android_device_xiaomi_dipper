@@ -37,3 +37,7 @@ Storage mode does not decrypt encrypted data. Diagnostic mode omits userdata.
 Modern FBE needs the installed ROM fstab, key services and compatible device blobs; it is not claimed here.
 The earlier Perseus reboot-to-recovery issue is unresolved; partition configuration alone does not prove its cause or fix.
 See `device-profile.json`, `prebuilt/README.md` and `SOURCES.md`.
+
+## Boot-failure log export
+
+Early pstore capture and runtime ramoops parameter export are available; see [LOG_CAPTURE.md](LOG_CAPTURE.md). In recovery, run `adb shell sh /system/bin/recovery-logs.sh`, then `adb pull /tmp/recovery-boot-logs.tar.gz`. The prebuilt kernel/DTB still determines the actual logging layout.
