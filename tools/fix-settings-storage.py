@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Adjust the pinned TWRP core to keep settings on dipper's writable cache."""
+"""Adjust the pinned TWRP core to keep settings on the device's writable cache."""
 import sys
 from pathlib import Path
 
@@ -61,3 +61,4 @@ replace('data.cpp', '''  persist_.SaveValues();
 for path, content in updates.items():
     path.write_text(content)
 print('TWRP settings: /cache/TWRP/.twrp_settings; mount/write errors are checked')
+

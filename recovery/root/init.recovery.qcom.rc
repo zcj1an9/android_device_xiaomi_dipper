@@ -1,6 +1,4 @@
 # SPDX-License-Identifier: Apache-2.0
-import /init.recovery.dipper-crypto.rc
-
 on fs
     wait /dev/block/platform/soc/${ro.boot.bootdevice} 5
     symlink /dev/block/platform/soc/${ro.boot.bootdevice} /dev/block/bootdevice
@@ -8,10 +6,6 @@ on fs
     chown system drmrpc /dev/qseecom
     chmod 0664 /dev/ion
     chown system system /dev/ion
-    symlink /firmware /vendor/firmware_mnt
 
 on boot
     setprop sys.usb.config adb
-
-# No stock-vendor mount over the ramdisk's QTI libraries, no partition rewrite,
-# no synthetic hwservicemanager/keystore service duplicating the TWRP core.

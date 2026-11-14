@@ -1,18 +1,9 @@
-# Validation status
+# Source validation — 2026-11-14
 
-Checked in this workspace on 2026-11-03:
-
-- Shell parser checks for all build, sync, fetch, probe and recovery-log scripts.
-- Generated both a Keymaster 4 / policy v2 / metadata-encrypted configuration
-  and a Keymaster 3 / policy v1 / no-metadata configuration.
-- Parsed generated HAL XML; checked that exactly the selected Keymaster service
-  is referenced, and that switching profiles removes stale metadata options.
-- GNU Make parsed BoardConfig at the actual `device/xiaomi/dipper` path and
-  resolved the fscrypt policy and prebuilt kernel path.
-- Rejected conflicting policy/cipher versions and incomplete metadata parameters.
-- Confirmed generated fstabs contain no `formattable` or dynamic `logical` flags.
-- Verified local upstream prebuilts against PREBUILTS.sha256.
-
-These are source/configuration checks, not a full Android build. No recovery.img
-has been produced or tested on a phone. The supplied crypto parameter examples
-are examples only; the phone's actual parameters have not yet been collected.
+Passed Python compilation, shell syntax, YAML parsing, manual-only/single-device workflow checks,
+actual GNU Make expansion of the kernel/DTBO/header arguments, both storage/diagnostic layouts,
+and raw-partition wipe protections. Missing binary files stop before source sync/build.
+The previous bootable Perseus V1.70 pair passed import checks; a corrupted DTBO was rejected.
+The already supplied feature-test image passed exact embedded kernel/DTBO comparisons.
+These checks do not compile this source or prove boot, decryption, backup/restore or reboot behavior.
+Per-device binary uploads and hardware testing are pending. No build was started.

@@ -1,0 +1,25 @@
+{
+  "device": "equuleus",
+  "baseline_commit": "aee2411485463c7f3389a40caf95f7404ef2b240",
+  "mounts": [
+    [
+      "system",
+      "/system_root"
+    ],
+    [
+      "vendor",
+      "/vendor"
+    ],
+    [
+      "cust",
+      "/cust"
+    ]
+  ],
+  "kernel_series": "4.19",
+  "boot_header": 1,
+  "upstream": "https://github.com/TeamWin/android_device_xiaomi_equuleus/tree/1e9ac6ba13a2358fe06b93faae654f442810efb0",
+  "kernel_sha256": null,
+  "dtbo_sha256": null,
+  "binary_status": "awaiting-user-upload",
+  "hardware_tested": false
+}

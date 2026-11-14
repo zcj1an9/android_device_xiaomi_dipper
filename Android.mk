@@ -1,4 +1,4 @@
 LOCAL_PATH := $(call my-dir)
-ifneq ($(filter dipper,$(TARGET_DEVICE)),)
+ifeq ($(TARGET_DEVICE),equuleus)
 include $(call all-makefiles-under,$(LOCAL_PATH))
 endif

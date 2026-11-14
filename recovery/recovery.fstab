@@ -1,0 +1,12 @@
+/dev/block/bootdevice/by-name/system /system_root ext4 ro,noload wait
+/dev/block/bootdevice/by-name/system /system_root erofs ro wait
+/dev/block/bootdevice/by-name/vendor /vendor ext4 ro,noload wait
+/dev/block/bootdevice/by-name/vendor /vendor erofs ro wait
+/dev/block/bootdevice/by-name/cust /cust ext4 ro,noload wait
+/dev/block/bootdevice/by-name/cust /cust erofs ro wait
+/dev/block/bootdevice/by-name/cache /cache ext4 noatime,nosuid,nodev wait
+/dev/block/bootdevice/by-name/persist /persist ext4 ro,noload wait
+/dev/block/bootdevice/by-name/modem /firmware vfat ro wait
+/dev/block/bootdevice/by-name/userdata /data ext4 noatime,nosuid,nodev wait
+/dev/block/bootdevice/by-name/userdata /data f2fs noatime,nosuid,nodev wait
+/dev/block/bootdevice/by-name/misc /misc emmc defaults defaults
