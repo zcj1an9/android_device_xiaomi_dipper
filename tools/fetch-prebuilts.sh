@@ -23,7 +23,7 @@ mkdir -p "$package_dir/prebuilt"
 cp "$temp_dir/dipper/prebuilt/419/Image.gz-dtb" "$package_dir/prebuilt/"
 while read -r hash relative; do
     case "$relative" in
-        prebuilt/Image.gz-dtb) continue ;;
+        prebuilt/Image.gz-dtb|prebuilt/dtbo.img) continue ;;
         recovery/root/*)
             source_path=${relative#recovery/root/}
             mkdir -p "$(dirname "$package_dir/$relative")"
@@ -33,3 +33,4 @@ while read -r hash relative; do
     esac
 done < "$package_dir/PREBUILTS.sha256"
 (cd "$package_dir" && sha256sum -c PREBUILTS.sha256)
+

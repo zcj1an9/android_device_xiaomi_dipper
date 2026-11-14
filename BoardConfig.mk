@@ -76,3 +76,8 @@ TARGET_RECOVERY_QCOM_RTC_FIX := true
 TWRP_INCLUDE_LOGCAT := true
 TARGET_USES_LOGD := true
 # Do not exclude APEX or override platform/security patch versions with 2099.
+
+
+# Embed only Dipper's user-supplied DTBO; do not flash the phone DTBO partition.
+BOARD_INCLUDE_RECOVERY_DTBO := true
+BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img

@@ -1,3 +1,5 @@
+> DTBO update: manual-only builds; upload Dipper DTBO with `tools/import-dtbo.py` before compiling. No build has been started.
+
 # GitHub Actions 构建
 
 工作流：**Build dipper TWRP**，位于 `.github/workflows/build-recovery.yml`。
@@ -84,3 +86,4 @@ System、Vendor、Cust 均同时提供 ext4 与 EROFS 挂载条目；EROFS 按�
 Storage 模式明确关闭 TW_INCLUDE_CRYPTO/TW_INCLUDE_CRYPTO_FBE，设备 BoardConfig 不再覆盖生成的模式选项；keystore2.recovery 由解密核心按需引入，不再额外强制引入普通 keystore2。这避免未加密 data 被带入 FBE 初始化和 keystore2 等待。Decrypt 模式继续启用硬件解密流程。
 
 Advanced Wipe 增加 System、Vendor、Cust，并显式保留 Cache、Data；System flags 使用核心归一化后的 /system_root 路径，同时修正 System 文件备份开关。适用于实际 ext4/F2FS 文件系统。EROFS 不能按可写目录擦除，应通过对应 Image 刷写新镜像。DTBO、EFS、Persist 和固件仍仅提供各自的备份/恢复/镜像操作。
+

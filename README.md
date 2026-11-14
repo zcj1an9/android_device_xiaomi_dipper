@@ -1,3 +1,5 @@
+> DTBO update: manual-only builds; upload Dipper DTBO with `tools/import-dtbo.py` before compiling. No build has been started.
+
 # TWRP device tree for Xiaomi Mi 8 (dipper)
 
 仓库建议命名：`android_device_xiaomi_dipper`；分支：`twrp-16.0`；Android 源码内路径：`device/xiaomi/dipper`。
@@ -148,3 +150,4 @@ GUI2 启动画面保留上游 Logo、实际版本和设备名称，在版本上�
 本地和 CI 的 `tools/build.sh` 都会运行 `tools/fix-splash-branding.py`，
 只对清单固定的 GUI2 源码应用补丁；可重复执行，遇到未识别的源码会在编译前停止。
 没有添加 init sleep，也没有延迟后台的挂载、设置读取或服务初始化。
+

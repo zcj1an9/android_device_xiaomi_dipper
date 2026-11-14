@@ -17,14 +17,6 @@ on:
         type: choice
         options: ['1', '2', '3', '4']
         default: '2'
-  push:
-    branches: [twrp-16.0]
-    paths:
-      - '.github/workflows/build-recovery.yml'
-      - 'tools/**'
-      - 'manifests/**'
-      - '*.mk'
-      - 'recovery/root/**'
 
 permissions:
   contents: read
@@ -35,6 +27,7 @@ concurrency:
 
 jobs:
   recovery:
+    if: github.ref == 'refs/heads/twrp-16.0'
     runs-on: ubuntu-24.04
     timeout-minutes: 350
     env:
@@ -55,7 +48,9 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Validate requested crypto profile
-        run: python3 device-tree/tools/ci-configure.py
+        run: |
+          python3 device-tree/tools/ci-configure.py
+          python3 device-tree/tools/check-dtbo.py
 
       - name: Prepare ephemeral runner
         shell: bash
@@ -140,3 +135,4 @@ jobs:
             device-tree/crypto-profile.json
           if-no-files-found: warn
           retention-days: 14
+

@@ -1,5 +1,4 @@
 # Re-fetched and verified with tools/fetch-prebuilts.sh
-prebuilt/Image.gz-dtb
 recovery/root/vendor/lib64/
 recovery/root/system/bin/android.hardware.*
 recovery/root/system/bin/qseecomd
@@ -14,3 +13,4 @@ recovery/root/system/etc/dipper-crypto.prop
 recovery/root/system/etc/twrp.flags
 __pycache__/
 *.log
+
