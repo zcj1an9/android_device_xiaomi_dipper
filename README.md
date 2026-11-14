@@ -1,3 +1,5 @@
+> Direct upload mode: `prebuilt/Image.gz-dtb` and `prebuilt/dtbo.img` are used as uploaded. No hash/format checks or import-manifest registration are required. Workflows remain manual-only.
+
 # Xiaomi MI MIX 3 (perseus) — TWRP 16
 
 Independent device branch `twrp-16.0-perseus`, based on latest Dipper core baseline `aee2411485463c7f3389a40caf95f7404ef2b240`.
@@ -6,7 +8,7 @@ Hardware comes from this device's reference tree and available device reports; i
 ## Build status
 
 Source preparation only; no compilation or new hardware verification has been performed.
-Upload this device's kernel and DTBO to `prebuilt/` through the importer before building.
+Upload this device's kernel and DTBO directly to `prebuilt/` before building. No importer or checksum registration is required.
 Perseus retains the previously bootable V1.70 pair. Equuleus awaits its own pair.
 Each branch has a manual-only single-device workflow. A push never starts compilation.
 
@@ -24,11 +26,11 @@ No assumed Super partition, MultiROM, duplicate legacy services or future-dated 
 ```sh
 python3 tools/configure-storage.py --mode storage
 python3 tools/preflight.py --source-only
-python3 tools/import-prebuilts.py --kernel /path/Image.gz-dtb --dtbo /path/dtbo.img
+cp /path/Image.gz-dtb prebuilt/Image.gz-dtb
+cp /path/dtbo.img prebuilt/dtbo.img
 python3 tools/preflight.py
 bash tools/sync-source.sh /path/android-source
 bash tools/build.sh /path/android-source
-python3 tools/verify-image.py /path/android-source/out/target/product/perseus/recovery.img
 ```
 
 Storage mode does not decrypt encrypted data. Diagnostic mode omits userdata.
