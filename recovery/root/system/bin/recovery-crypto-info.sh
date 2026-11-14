@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Run as root in an existing recovery. Output is text on stdout; no key material.
 set -u
-PROBE=/tmp/dipper-crypto-probe-$$
+PROBE=/tmp/recovery-crypto-probe-$$
 ACTIVE=
 cleanup() {
     for target in $ACTIVE; do umount "$target" 2>/dev/null; done
@@ -61,3 +61,4 @@ else
     echo 'fscryptpolicyget unavailable in this recovery'
 fi
 printf '\n=== END ===\n'
+

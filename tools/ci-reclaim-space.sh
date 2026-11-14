@@ -8,7 +8,7 @@ source_dir=$(realpath -- "$source_dir")
 [[ -n ${GITHUB_WORKSPACE:-} && "$source_dir" == "$(realpath -- "$GITHUB_WORKSPACE")/android-source" ]] || {
     echo 'Refusing cleanup outside the disposable android-source directory'; exit 1;
 }
-test -s "$source_dir/dipper-source-lock.xml"
+test -s "$source_dir/perseus-source-lock.xml"
 test -f "$source_dir/build/envsetup.sh"
 test -d "$source_dir/.repo"
 echo 'Disk usage before removing synced Git object stores:'
@@ -26,3 +26,4 @@ if (( available < 30 * 1024 * 1024 * 1024 )); then
     du -h -d 2 "$source_dir" 2>/dev/null | sort -h | tail -25
     exit 1
 fi
+

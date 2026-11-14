@@ -1,0 +1,25 @@
+{
+  "device": "perseus",
+  "baseline_commit": "aee2411485463c7f3389a40caf95f7404ef2b240",
+  "mounts": [
+    [
+      "system",
+      "/system_root"
+    ],
+    [
+      "vendor",
+      "/vendor"
+    ],
+    [
+      "cust",
+      "/system_ext"
+    ]
+  ],
+  "kernel_series": "4.19",
+  "boot_header": 1,
+  "upstream": "https://github.com/kamstartech/twrp-device_xiaomi_perseus/tree/c5f52882e898a3a47bad2d0db33afe0ae2a0fc39",
+  "kernel_sha256": "da7ac3b83f7583ac658c385a6e613bb46fab55e22b032044c922c51ec0b70863",
+  "dtbo_sha256": "60d6bf090085259f8b0fa4584fa0309f5753a56b28c85b29dfbc2cec669f7e27",
+  "binary_status": "awaiting-user-upload",
+  "hardware_tested": false
+}

@@ -1,47 +1,35 @@
-name: Build dipper TWRP
+name: Build perseus TWRP
 
 on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'storage: unencrypted data; diagnostic: omit data; decrypt: actual ROM profile'
+        description: 'storage: unencrypted data; diagnostic: omit data'
         type: choice
-        options: [storage, diagnostic, decrypt]
+        options: [storage, diagnostic]
         default: storage
-      crypto_profile:
-        description: 'JSON object from ACTIONS.md; required for decrypt mode'
-        type: string
-        required: false
       jobs:
         description: 'Parallel compile jobs (1-4)'
         type: choice
         options: ['1', '2', '3', '4']
         default: '2'
-  push:
-    branches: [twrp-16.0]
-    paths:
-      - '.github/workflows/build-recovery.yml'
-      - 'tools/**'
-      - 'manifests/**'
-      - '*.mk'
-      - 'recovery/root/**'
 
 permissions:
   contents: read
 
 concurrency:
-  group: dipper-recovery-${{ github.ref }}
+  group: perseus-recovery-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
   recovery:
+    if: github.ref == 'refs/heads/twrp-16.0-perseus'
     runs-on: ubuntu-24.04
     timeout-minutes: 350
     env:
       BUILD_MODE: ${{ inputs.mode || 'storage' }}
-      CRYPTO_PROFILE: ${{ inputs.crypto_profile }}
-      DIPPER_JOBS: ${{ inputs.jobs || '2' }}
-      DIPPER_SYNC_JOBS: '4'
+      RECOVERY_JOBS: ${{ inputs.jobs || '2' }}
+      RECOVERY_SYNC_JOBS: '4'
       # -j does not bound Soong's Go heap or goroutine parallelism.
       GOMEMLIMIT: '10GiB'
       GOGC: '50'
@@ -55,7 +43,9 @@ jobs:
           ref: ${{ github.sha }}
 
       - name: Validate requested crypto profile
-        run: python3 device-tree/tools/ci-configure.py
+        run: |
+          python3 device-tree/tools/configure-storage.py --mode "$BUILD_MODE"
+          python3 device-tree/tools/preflight.py
 
       - name: Prepare ephemeral runner
         shell: bash
@@ -73,10 +63,10 @@ jobs:
           git config --global user.name 'Recovery Builder'
           git config --global user.email 'recovery-builder@users.noreply.github.com'
           # Bound memory pressure; Android/Soong may need more than runner RAM.
-          sudo fallocate -l 24G /swapfile-dipper
-          sudo chmod 600 /swapfile-dipper
-          sudo mkswap /swapfile-dipper
-          sudo swapon /swapfile-dipper
+          sudo fallocate -l 24G /swapfile-perseus
+          sudo chmod 600 /swapfile-perseus
+          sudo mkswap /swapfile-perseus
+          sudo swapon /swapfile-perseus
           df -h
           free -h
           test "$(df --output=avail -B1 "$GITHUB_WORKSPACE" | tail -1)" -gt 55000000000
@@ -99,15 +89,16 @@ jobs:
         run: |
           set -euo pipefail
           bash device-tree/tools/ci-build.sh "$ANDROID_SOURCE"
+          python3 device-tree/tools/verify-image.py "$ANDROID_SOURCE/out/target/product/perseus/recovery.img"
 
       - name: Package image and provenance
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p artifacts
-          cp "$ANDROID_SOURCE/out/target/product/dipper/recovery.img" "artifacts/twrp-dipper-$BUILD_MODE.img"
+          cp "$ANDROID_SOURCE/out/target/product/perseus/recovery.img" "artifacts/twrp-perseus-$BUILD_MODE.img"
           cp device-tree/crypto-profile.json artifacts/
-          cp "$ANDROID_SOURCE/dipper-source-lock.xml" artifacts/
+          cp "$ANDROID_SOURCE/perseus-source-lock.xml" artifacts/
           cp device-tree/PREBUILTS.sha256 artifacts/
           git -C device-tree rev-parse HEAD > artifacts/device-tree-commit.txt
           (cd artifacts && sha256sum *.img > SHA256SUMS)
@@ -117,7 +108,7 @@ jobs:
         if: success()
         uses: actions/upload-artifact@v4
         with:
-          name: twrp-dipper-${{ env.BUILD_MODE }}-${{ github.run_number }}
+          name: twrp-perseus-${{ env.BUILD_MODE }}-${{ github.run_number }}
           path: artifacts/
           if-no-files-found: error
           retention-days: 14
@@ -126,17 +117,18 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: dipper-build-logs-${{ github.run_number }}
+          name: perseus-build-logs-${{ github.run_number }}
           path: |
             source-sync.log
             disk-cleanup.log
             build-console.log
             resource-usage.log
             runner-diagnostics.txt
-            android-source/dipper-recovery-build.log
-            android-source/dipper-source-lock.xml
+            android-source/perseus-recovery-build.log
+            android-source/perseus-source-lock.xml
             android-source/out/error.log
             android-source/out/soong.log
             device-tree/crypto-profile.json
           if-no-files-found: warn
           retention-days: 14
+

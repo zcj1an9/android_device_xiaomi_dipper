@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Apply the dipper splash customization to the exact pinned GUI2 core.
+"""Apply the shared splash customization to the exact pinned GUI2 core.
 
 No sleeping or initialization delays: retain the splash until four seconds
 have elapsed before the normal home transition. Interactive startup prompts
@@ -55,3 +55,4 @@ if __name__ == '__main__':
     if len(sys.argv) != 2:
         raise SystemExit('Usage: fix-splash-branding.py /path/to/bootable/recovery')
     main(Path(sys.argv[1]))
+

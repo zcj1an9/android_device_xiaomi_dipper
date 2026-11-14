@@ -1,0 +1,6 @@
+{
+  "mode": "storage",
+  "device": "perseus",
+  "data_mount": true,
+  "hardware_crypto_services": false
+}

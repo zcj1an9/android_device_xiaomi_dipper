@@ -7,24 +7,24 @@ source_dir=${1:-$PWD}
 cd "$source_dir"
 test -f build/envsetup.sh || { echo 'Not an Android source checkout'; exit 1; }
 test -f "$package_dir/crypto-profile.mk" || { echo 'Run configure.py first'; exit 1; }
-bash "$package_dir/tools/fetch-prebuilts.sh"
+python3 "$package_dir/tools/preflight.py"
 test -d system/vold || exit 1
 # Fail before compilation when an older decrypt core was synced accidentally.
 grep -q 'Gatekeeper_Verify' system/vold/Decrypt.cpp || { echo 'Wrong/older vold fork'; exit 1; }
 grep -q 'syncKeystoreDb' system/vold/Decrypt.cpp || { echo 'Missing modern synthetic-password path'; exit 1; }
-if [[ -e device/xiaomi/dipper && "$(cd device/xiaomi/dipper && pwd)" != "$package_dir" ]]; then
-    echo 'device/xiaomi/dipper exists. Move it aside explicitly before installing this tree.'
+if [[ -e device/xiaomi/perseus && "$(cd device/xiaomi/perseus && pwd)" != "$package_dir" ]]; then
+    echo 'device/xiaomi/perseus exists. Move it aside explicitly before installing this tree.'
     exit 1
 fi
 mkdir -p device/xiaomi
-if [[ ! -e device/xiaomi/dipper ]]; then
-    cp -a "$package_dir" device/xiaomi/dipper
+if [[ ! -e device/xiaomi/perseus ]]; then
+    cp -a "$package_dir" device/xiaomi/perseus
 fi
 # Keep a single installer for /init.recovery.usb.rc: the core Soong prebuilt.
 # Feed it the device's configfs rules instead of also copying that destination
 # from PRODUCT_COPY_FILES. This runs before envsetup/Soong on local and CI builds.
 test -f bootable/recovery/etc/init.recovery.usb.rc || { echo 'Missing core USB init prebuilt'; exit 1; }
-cp device/xiaomi/dipper/recovery/root/init.recovery.usb.rc bootable/recovery/etc/init.recovery.usb.rc
+cp device/xiaomi/perseus/recovery/root/init.recovery.usb.rc bootable/recovery/etc/init.recovery.usb.rc
 python3 "$package_dir/tools/fix-settings-storage.py" bootable/recovery
 python3 "$package_dir/tools/fix-runtime-review.py" bootable/recovery
 python3 "$package_dir/tools/fix-splash-branding.py" bootable/recovery
@@ -45,8 +45,9 @@ export ALLOW_MISSING_DEPENDENCIES=true
 printf 'Upstream minimal-manifest mode: ALLOW_MISSING_DEPENDENCIES=%s\n' "$ALLOW_MISSING_DEPENDENCIES"
 source build/envsetup.sh
 # Android 16's release-config lunch syntax. Override only if your source differs.
-lunch "${DIPPER_LUNCH:-twrp_dipper-bp2a-userdebug}"
-m -j"${DIPPER_JOBS:-4}" recoveryimage 2>&1 | tee dipper-recovery-build.log
-test -s out/target/product/dipper/recovery.img
-test "$(stat -c%s out/target/product/dipper/recovery.img)" -le 67108864
-sha256sum out/target/product/dipper/recovery.img
+lunch "${RECOVERY_LUNCH:-twrp_perseus-bp2a-userdebug}"
+m -j"${RECOVERY_JOBS:-4}" recoveryimage 2>&1 | tee perseus-recovery-build.log
+test -s out/target/product/perseus/recovery.img
+test "$(stat -c%s out/target/product/perseus/recovery.img)" -le 67108864
+sha256sum out/target/product/perseus/recovery.img
+

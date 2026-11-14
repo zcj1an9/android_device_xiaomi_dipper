@@ -1,39 +1,12 @@
-# Sources and licensing
+# Sources and decisions
 
-This is an experimental standalone recovery device tree, not a kernel fork.
+Core/tooling baseline: https://github.com/zcj1an9/android_device_xiaomi_dipper/commit/aee2411485463c7f3389a40caf95f7404ef2b240
+Device reference: https://github.com/kamstartech/twrp-device_xiaomi_perseus/tree/c5f52882e898a3a47bad2d0db33afe0ae2a0fc39
+TWRP core: TWRP-Test/android_bootable_recovery @ 8a58fc3b586b8a908337fa87529cfbbb119ec7bb
+Vold: TWRP-Test/android_system_vold @ e7e26ed2ffd9ad0469a05515cfd91940a3366d19
+Perseus binary reference SHA256: cf3b6b124faeb5c1087cbe364db40dd99ecb0ffba6c8ad2bb75e7ff42c0fd120
 
-| Component | Upstream | Revision |
-|---|---|---|
-| dipper kernel prebuilt | https://gitlab.com/OrangeFox/device/dipper | `42f273eba9a39281c523cec361aa68a8ac5ef298`, `prebuilt/419/Image.gz-dtb` |
-| QTI prebuilts, USB init | https://gitlab.com/OrangeFox/device/sdm845-common | `4145d071ae1e86a245354215638946e85711204a` |
-| Original dipper hardware layout, ueventd | https://github.com/LucyfMorning/twrp_device_xiaomi_dipper | `3edb97ccd2dfc92cf8af10a4f6abbdc646c75676` |
-| Android manifest | https://github.com/TWRP-Test/platform_manifest_twrp_aosp | `814b553116ceedde197f70389cff9661d81d8337` |
-| Recovery core | https://github.com/TWRP-Test/android_bootable_recovery | `8a58fc3b586b8a908337fa87529cfbbb119ec7bb` |
-| vold / synthetic-password decryption | https://github.com/TWRP-Test/android_system_vold | `e7e26ed2ffd9ad0469a05515cfd91940a3366d19` |
-
-The upstream dipper README identifies the 4.19 kernel source as
-https://github.com/duckyduckG/android_kernel_xiaomi_sdm845_419 on
-`lineage-23.2_xiaomi`. The exact kernel source commit that produced the supplied
-binary is not recorded in that README; this project does not claim a reproducible
-kernel source-to-binary match. The binary is fetched from the pinned device-tree
-revision and checked against PREBUILTS.sha256. No V1.71 binary is used.
-
-New configuration/scripts are under Apache-2.0, identified by SPDX headers.
-USB init and ueventd preserve their upstream license headers. Linux kernel
-licensing is GPL-2.0; COPYING is included. OrangeFox scripts/configuration are
-GPL-3.0-or-later where indicated upstream; LICENSE.GPL-3.0 is included for reference.
-Qualcomm/other vendor ELF files remain proprietary upstream material: no ownership
-or new license is asserted. They are fetched separately instead of republished
-as newly authored source.
-
-`tools/build.sh` applies local adjustments to the pinned recovery checkout:
-it supplies the device's USB init contents to the core Soong prebuilt (the sole
-installer of `/init.recovery.usb.rc`), and removes the critical restart policy
-from recovery's keystore2 service. Always build through this script, including
-for manual builds, so these adjustments are applied before Soong runs.
-
-Additional raw backup partition names (system/vendor/persist images, modem, bluetooth, dsp and EFS modemst1/modemst2/fsc/fsg) follow TeamWin/android_device_xiaomi_dipper `android-9.0` recovery.fstab: https://github.com/TeamWin/android_device_xiaomi_dipper/blob/android-9.0/recovery.fstab . Its obsolete data encryption options are not imported.
-
-`tools/fix-settings-storage.py` additionally redirects core settings to /cache/TWRP and checks mount/write failures before reporting success. This is applied to the pinned recovery source before compilation and is idempotent. Storage-mode crypto selection comes from the generated profile.
-
-`tools/fix-runtime-review.py` applies checked, repeatable edits to the pinned core: Android installation detection based on files and e2fsck exit-code semantics. Device configuration selects sysfs battery reporting, non-A/B behavior, libresetprop and unconditional task profiles. See REVIEW-20261105.md.
+Only shared core fixes/build tooling are reused. Device layout, display values and USB rules are independent.
+No hardcoded userdata/system partition sizes are carried over from another ROM.
+MultiROM/logical/Super assumptions and 2099 security patches in reference trees are intentionally excluded.
+Header v1 embeds each device's own DTBO at the user's request. Equuleus boot compatibility awaits its supplied binaries and device testing.
