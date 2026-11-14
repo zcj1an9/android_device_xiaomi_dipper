@@ -151,3 +151,7 @@ GUI2 启动画面保留上游 Logo、实际版本和设备名称，在版本上�
 只对清单固定的 GUI2 源码应用补丁；可重复执行，遇到未识别的源码会在编译前停止。
 没有添加 init sleep，也没有延迟后台的挂载、设置读取或服务初始化。
 
+
+## Boot-failure log export
+
+Early pstore capture and runtime ramoops parameter export are available; see [LOG_CAPTURE.md](LOG_CAPTURE.md). In recovery, run `adb shell sh /system/bin/recovery-logs.sh`, then `adb pull /tmp/recovery-boot-logs.tar.gz`. The prebuilt kernel/DTB still determines the actual logging layout.
