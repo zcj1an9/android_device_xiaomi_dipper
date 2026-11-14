@@ -11,5 +11,5 @@ mkdir -p .repo/local_manifests
 cp "$package_dir/manifests/equuleus-core.xml" .repo/local_manifests/
 repo sync -c --no-tags --no-clone-bundle -j"${RECOVERY_SYNC_JOBS:-4}"
 repo manifest -r -o equuleus-source-lock.xml
-python3 "$package_dir/tools/preflight.py"
+python3 "$package_dir/tools/preflight.py" --source-only
 

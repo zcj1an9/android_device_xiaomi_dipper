@@ -1,8 +1,12 @@
 # equuleus prebuilts
 
-Place this device's `Image.gz-dtb` and `dtbo.img` here. Files are not shared across branches.
-Import with `python3 tools/import-prebuilts.py --kernel /path/Image.gz-dtb --dtbo /path/dtbo.img`.
-The importer checks gzip, Linux 4.19, appended DTBs, DTBO bounds and pinned hashes before writing anything.
-Perseus is pinned to the previously bootable V1.70 pair; no V1.73 substitution.
-Binary files are pending upload. No automatic download or Dipper kernel fallback is allowed.
-DTBO is embedded in recovery's header-v1 payload; this project does not flash the phone DTBO partition.
+Upload this device's files directly here:
+
+- `Image.gz-dtb`: device-specific kernel with appended base DTB(s)
+- `dtbo.img`: this device's DTBO
+
+Actions and local build scripts use these files directly. No import script, hash match, format validator or checksum-manifest registration is required. Files are neither downloaded nor replaced by a kernel from another device.
+
+DTBO is embedded into recovery's header-v1 payload. These scripts do not flash the separate phone DTBO partition.
+
+Perseus should use the previously bootable V1.70 pair as requested. Device compatibility depends on the files you upload and subsequent hardware testing; a successful build does not establish boot compatibility.

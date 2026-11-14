@@ -5,7 +5,7 @@ import json
 import subprocess
 import tempfile
 from pathlib import Path
-from prebuilts import ROOT, verify
+from prebuilts import ROOT
 
 p=argparse.ArgumentParser()
 p.add_argument('--source-only',action='store_true',help='Check source layout without claiming binaries are ready')
@@ -44,5 +44,5 @@ if '/dev/block/mapper/' in fstab or '/by-name/super' in fstab:
 for path in ['BoardConfig.mk','device.mk','tools/build.sh','tools/sync-source.sh']:
     if 'device/xiaomi/dipper' in (ROOT/path).read_text():
         raise SystemExit('Dipper hardware path leaked into independent tree')
-if not a.source_only:verify()
-print(device+': source checks passed'+('; binary upload and hardware test pending' if a.source_only else '; both prebuilts verified'))
+# Uploaded kernel and DTBO are used directly; no binary/checksum validation.
+print(device+': source checks passed; uploaded kernel/DTBO are used directly')

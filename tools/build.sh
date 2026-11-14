@@ -7,7 +7,7 @@ source_dir=${1:-$PWD}
 cd "$source_dir"
 test -f build/envsetup.sh || { echo 'Not an Android source checkout'; exit 1; }
 test -f "$package_dir/crypto-profile.mk" || { echo 'Run configure.py first'; exit 1; }
-python3 "$package_dir/tools/preflight.py"
+python3 "$package_dir/tools/preflight.py" --source-only
 test -d system/vold || exit 1
 # Fail before compilation when an older decrypt core was synced accidentally.
 grep -q 'Gatekeeper_Verify' system/vold/Decrypt.cpp || { echo 'Wrong/older vold fork'; exit 1; }

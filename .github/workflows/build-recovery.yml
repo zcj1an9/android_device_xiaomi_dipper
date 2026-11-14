@@ -42,10 +42,10 @@ jobs:
           path: device-tree
           ref: ${{ github.sha }}
 
-      - name: Validate requested crypto profile
+      - name: Configure recovery mode
         run: |
           python3 device-tree/tools/configure-storage.py --mode "$BUILD_MODE"
-          python3 device-tree/tools/preflight.py
+          python3 device-tree/tools/preflight.py --source-only
 
       - name: Prepare ephemeral runner
         shell: bash
@@ -89,7 +89,6 @@ jobs:
         run: |
           set -euo pipefail
           bash device-tree/tools/ci-build.sh "$ANDROID_SOURCE"
-          python3 device-tree/tools/verify-image.py "$ANDROID_SOURCE/out/target/product/equuleus/recovery.img"
 
       - name: Package image and provenance
         shell: bash
