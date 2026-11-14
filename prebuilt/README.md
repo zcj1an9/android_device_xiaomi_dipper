@@ -1,7 +1,12 @@
-# Dipper prebuilts
+# dipper prebuilts
 
-Upload Dipper's `dtbo.img` here using `python3 tools/import-dtbo.py /path/dtbo.img`.
-The existing pinned Dipper kernel and common crypto-blob fetch process is preserved.
-Only the DTBO is new and awaiting upload. No other device DTBO is accepted as a fallback.
-DTBO is embedded into the header-v1 recovery; no phone partition is flashed by these scripts.
-Workflow is now manual-only. This source change has not been built or tested on hardware.
+Upload this device's files directly here:
+
+- `Image.gz-dtb`: device-specific kernel with appended base DTB(s)
+- `dtbo.img`: this device's DTBO
+
+Actions and local build scripts use these files directly. No import script, hash match, format validator or checksum-manifest registration is required. Files are neither downloaded nor replaced by a kernel from another device.
+
+DTBO is embedded into recovery's header-v1 payload. These scripts do not flash the separate phone DTBO partition.
+
+Perseus should use the previously bootable V1.70 pair as requested. Device compatibility depends on the files you upload and subsequent hardware testing; a successful build does not establish boot compatibility.

@@ -3,7 +3,7 @@
 # Fetch only the upstream kernel and proprietary files listed in PREBUILTS.sha256.
 set -euo pipefail
 package_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-if (cd "$package_dir" && sha256sum -c PREBUILTS.sha256 >/dev/null 2>&1); then
+if (cd "$package_dir" && awk '$2 !~ /^prebuilt\//' PREBUILTS.sha256 | sha256sum -c - >/dev/null 2>&1); then
     echo 'Pinned prebuilts already present and verified'
     exit 0
 fi
@@ -17,10 +17,8 @@ fetch_tree() {
     git -C "$target" checkout -q --detach FETCH_HEAD
     test "$(git -C "$target" rev-parse HEAD)" = "$sha"
 }
-fetch_tree https://gitlab.com/OrangeFox/device/dipper.git 42f273eba9a39281c523cec361aa68a8ac5ef298 "$temp_dir/dipper"
 fetch_tree https://gitlab.com/OrangeFox/device/sdm845-common.git 4145d071ae1e86a245354215638946e85711204a "$temp_dir/common"
 mkdir -p "$package_dir/prebuilt"
-cp "$temp_dir/dipper/prebuilt/419/Image.gz-dtb" "$package_dir/prebuilt/"
 while read -r hash relative; do
     case "$relative" in
         prebuilt/Image.gz-dtb|prebuilt/dtbo.img) continue ;;
@@ -32,5 +30,5 @@ while read -r hash relative; do
         *) echo "Unexpected prebuilt path: $relative" >&2; exit 1 ;;
     esac
 done < "$package_dir/PREBUILTS.sha256"
-(cd "$package_dir" && sha256sum -c PREBUILTS.sha256)
+(cd "$package_dir" && awk '$2 !~ /^prebuilt\//' PREBUILTS.sha256 | sha256sum -c -)
 

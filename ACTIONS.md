@@ -1,4 +1,4 @@
-> DTBO update: manual-only builds; upload Dipper DTBO with `tools/import-dtbo.py` before compiling. No build has been started.
+> Direct upload mode: `prebuilt/Image.gz-dtb` and `prebuilt/dtbo.img` are used as uploaded. No hash/format checks or import-manifest registration are required. Workflows remain manual-only.
 
 # GitHub Actions 构建
 

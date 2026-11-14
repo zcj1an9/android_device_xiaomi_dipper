@@ -47,10 +47,9 @@ jobs:
           path: device-tree
           ref: ${{ github.sha }}
 
-      - name: Validate requested crypto profile
+      - name: Configure recovery mode
         run: |
           python3 device-tree/tools/ci-configure.py
-          python3 device-tree/tools/check-dtbo.py
 
       - name: Prepare ephemeral runner
         shell: bash

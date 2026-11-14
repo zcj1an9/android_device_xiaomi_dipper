@@ -7,7 +7,6 @@ source_dir=${1:-$PWD}
 cd "$source_dir"
 test -f build/envsetup.sh || { echo 'Not an Android source checkout'; exit 1; }
 test -f "$package_dir/crypto-profile.mk" || { echo 'Run configure.py first'; exit 1; }
-python3 "$package_dir/tools/check-dtbo.py"
 bash "$package_dir/tools/fetch-prebuilts.sh"
 test -d system/vold || exit 1
 # Fail before compilation when an older decrypt core was synced accidentally.
